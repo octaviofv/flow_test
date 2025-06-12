@@ -182,9 +182,21 @@ export default {
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
     const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
     const initialNodeValue = computed(() => {
-      console.log('WeWeb props.content:', props.content);
-      console.log('initialNodeValue from props:', props.content?.initialNodeValue);
-      return props.content?.initialNodeValue || 'Nodo Inicial';
+      console.log('=== DEBUG initialNodeValue ===');
+      console.log('Full props.content:', props.content);
+      console.log('props.content.initialNodeValue:', props.content?.initialNodeValue);
+      console.log('typeof initialNodeValue:', typeof props.content?.initialNodeValue);
+      console.log('toolName for comparison:', props.content?.toolName);
+      console.log('typeof toolName:', typeof props.content?.toolName);
+      
+      // Intentar diferentes maneras de acceder al valor
+      const value = props.content?.initialNodeValue;
+      const fallback = 'Nodo Inicial';
+      
+      console.log('Final value:', value || fallback);
+      console.log('=== END DEBUG ===');
+      
+      return value || fallback;
     });
 
     const defaultFlowData = {
