@@ -46,7 +46,8 @@ import {
   MiniMap, 
   Panel 
 } from '@vue-flow/core';
-import { v4 as uuidv4 } from 'uuid';
+//import { v4 as uuidv4 } from 'uuid';
+//import { cloneDeep } from 'lodash';
 
 // Import custom components
 import CustomNode from './components/CustomNode.vue';
@@ -141,7 +142,6 @@ export default {
     const backgroundGap = computed(() => props.content?.backgroundGap || 20);
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
     const backgroundColor = computed(() => props.content?.backgroundColor || '#f5f5f5');
-    const initialNodeValue = computed(() => props.content?.initialNodeValue || 'Nodo Inicial');
 
     const zoomIn = () => {
       vueFlowZoomIn();
@@ -160,7 +160,7 @@ export default {
           position: { x: 100, y: 100 },
           data: {
             label: 'Entrada',
-            content: initialNodeValue.value,
+            content: 'Información de entrada',
             number: '1',
             backgroundColor: '#E3F2FD'
           }
@@ -339,7 +339,7 @@ export default {
           y: event.clientY - bounds.top
         });
         
-        // Create a new node using initialNodeValue
+        // Create a new node
         const newNode = {
           id: `node-${uuidv4()}`,
           type: 'custom',
@@ -347,7 +347,7 @@ export default {
           data: {
             ...nodeTemplate,
             label: nodeTemplate.label || 'New Node',
-            content: nodeTemplate.content || initialNodeValue.value,
+            content: nodeTemplate.content || '',
             backgroundColor: nodeTemplate.backgroundColor || '#ffffff',
             width: 200,
             height: 100
@@ -449,7 +449,6 @@ export default {
       backgroundGap,
       showMinimap,
       backgroundColor,
-      initialNodeValue,
       onNodeClick,
       onConnect,
       onPaneClick,
