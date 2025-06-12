@@ -38,6 +38,23 @@ export default {
     /* wwEditor:end */
   },
 
+  initialNodeValue: {
+    label: { en: 'Initial Node Value' },
+    type: 'Text',
+    section: 'settings',
+    bindable: true,
+    defaultValue: 'Nodo Inicial',
+    /* wwEditor:start */
+    bindingValidation: {
+      type: 'string',
+      tooltip: 'Set the initial value/text that will be displayed in new nodes',
+    },
+    propertyHelp: {
+      tooltip: 'Define the default text content for new nodes in the flow chart',
+    },
+    /* wwEditor:end */
+  },
+
   width: {
     label: { en: 'Width' },
     type: 'Length',

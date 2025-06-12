@@ -41,6 +41,42 @@
         <Background :pattern-color="backgroundColor" :gap="backgroundGap" />
         <Controls />
         <MiniMap v-if="showMinimap" />
+        
+        <!-- Controles de Zoom personalizados -->
+        <Panel class="zoom-controls" position="bottom-right">
+          <button 
+            @click="zoomIn" 
+            class="zoom-btn zoom-in"
+            title="Acercar"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </button>
+          <button 
+            @click="zoomOut" 
+            class="zoom-btn zoom-out"
+            title="Alejar"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </button>
+          <button 
+            @click="fitViewToContent" 
+            class="zoom-btn fit-view"
+            title="Ajustar vista"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+        </Panel>
       </VueFlow>
     </div>
   </div>
@@ -126,6 +162,10 @@ export default {
       removeNodes, 
       project,
       fitView,
+      zoomIn: vueFlowZoomIn,
+      zoomOut: vueFlowZoomOut,
+      zoomTo,
+      getViewport,
     } = useVueFlow({
       defaultEdgeOptions,
     });
@@ -141,6 +181,7 @@ export default {
     const backgroundGap = computed(() => props.content?.backgroundGap || 20);
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
     const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
+    const initialNodeValue = computed(() => props.content?.initialNodeValue || 'Nodo Inicial');
 
     const defaultFlowData = {
       nodes: [
@@ -150,7 +191,7 @@ export default {
           position: { x: 300, y: 50 },
           data: {
             label: 'Entrada',
-            content: 'Información de entrada',
+            content: initialNodeValue.value,
             number: '1',
             subTitle: 'Sin herramienta'
           }
@@ -281,6 +322,10 @@ export default {
         id: generateId(),
         ...data,
         position,
+        data: {
+          ...data.data,
+          content: data.data?.content || initialNodeValue.value,
+        }
       };
 
       addNodes([newNode]);
@@ -354,6 +399,18 @@ export default {
       }
     };
 
+    const zoomIn = () => {
+      vueFlowZoomIn();
+    };
+
+    const zoomOut = () => {
+      vueFlowZoomOut();
+    };
+
+    const fitViewToContent = () => {
+      fitView({ padding: 0.2, duration: 300 });
+    };
+
     return {
       elements,
       initialized,
@@ -365,6 +422,7 @@ export default {
       backgroundGap,
       showMinimap,
       backgroundColor,
+      initialNodeValue,
       defaultEdgeOptions,
       onNodeClick,
       onConnect,
@@ -377,6 +435,9 @@ export default {
       onNodesDelete,
       onEdgesDelete,
       onNodeDataUpdate,
+      zoomIn,
+      zoomOut,
+      fitViewToContent,
     };
   },
 };
@@ -427,6 +488,62 @@ export default {
   :deep(.vue-flow__edge-path) {
     stroke: #2196F3;
     stroke-width: 2;
+  }
+}
+
+.zoom-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  .zoom-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #374151;
+
+    &:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+      color: #111827;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+  }
+
+  .zoom-in svg {
+    color: #10b981;
+  }
+
+  .zoom-out svg {
+    color: #f59e0b;
+  }
+
+  .fit-view svg {
+    color: #3b82f6;
   }
 }
 </style>
