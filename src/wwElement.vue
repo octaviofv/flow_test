@@ -105,12 +105,17 @@ export default {
     });
 
     const defaultEdgeOptions = {
-      type: 'straight',
-      animated: false,
+      type: 'smoothstep',
+      animated: true,
       style: { 
         strokeWidth: 2,
-        strokeDasharray: '5,5',
-        stroke: '#999999'
+        stroke: '#3B82F6'
+      },
+      markerEnd: {
+        type: 'arrowclosed',
+        width: 20,
+        height: 20,
+        color: '#3B82F6',
       },
     };
 
@@ -178,24 +183,34 @@ export default {
           id: 'edge-1',
           source: 'entrada-1',
           target: 'proceso-1',
-          type: 'straight',
-          animated: false,
+          type: 'smoothstep',
+          animated: true,
           style: { 
             strokeWidth: 2,
-            strokeDasharray: '5,5',
-            stroke: '#999999'
+            stroke: '#3B82F6'
+          },
+          markerEnd: {
+            type: 'arrowclosed',
+            width: 20,
+            height: 20,
+            color: '#3B82F6',
           }
         },
         {
           id: 'edge-2',
           source: 'proceso-1',
           target: 'salida-1',
-          type: 'straight',
-          animated: false,
+          type: 'smoothstep',
+          animated: true,
           style: { 
             strokeWidth: 2,
-            strokeDasharray: '5,5',
-            stroke: '#999999'
+            stroke: '#3B82F6'
+          },
+          markerEnd: {
+            type: 'arrowclosed',
+            width: 20,
+            height: 20,
+            color: '#3B82F6',
           }
         }
       ]
@@ -384,8 +399,6 @@ export default {
   bottom: 0;
   display: flex;
 }
-
-
 
 .flowchart-sidebar {
   flex-shrink: 0;

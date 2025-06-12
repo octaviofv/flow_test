@@ -1,43 +1,62 @@
 <template>
   <div 
     class="custom-node" 
-    :class="{ selected }"
+    :class="{ selected, editing: isEditing }"
     @dblclick="startEditing"
   >
     <div class="node-header">
       <div class="node-icon">
         <div class="node-number">{{ data.number || '1' }}</div>
       </div>
-      <div class="node-info">
-        <div class="node-title" v-if="!isEditing">{{ data.label || 'Proceso' }}</div>
-        <input
-          v-else
-          v-model="editedLabel"
-          class="edit-input"
-          @keyup.enter="saveChanges"
-          @keyup.esc="cancelEdit"
-          ref="labelInput"
-          placeholder="Enter title"
-        />
-        <div class="node-subtitle">{{ data.subTitle || 'Sin herramienta' }}</div>
-      </div>
+      <div class="node-title">{{ data.label || 'Proceso' }}</div>
+      <div class="node-type">{{ data.subTitle || 'Proceso' }}</div>
     </div>
     
     <div class="node-content">
-      <div class="content-text" v-if="!isEditing">{{ data.content || 'Procesamiento de información' }}</div>
-      <textarea
-        v-else
-        v-model="editedContent"
-        class="edit-textarea"
-        @keyup.esc="cancelEdit"
-        ref="contentTextarea"
-        placeholder="Enter content"
-      ></textarea>
-    </div>
+      <div v-if="!isEditing" class="content-display" @click="startEditing">
+        <div class="content-label">DESCRIPCIÓN</div>
+        <div class="content-text">
+          {{ data.content || 'Doble clic para editar descripción...' }}
+        </div>
+      </div>
+      <div v-else class="content-editor">
+        <div class="editor-row">
+          <label>Título:</label>
+          <input
+            v-model="editedLabel"
+            class="edit-input"
+            @keyup.enter="saveChanges"
+            @keyup.esc="cancelEdit"
+            ref="labelInput"
+            placeholder="Título del proceso"
+          />
+        </div>
+        <div class="editor-row">
+          <label>Descripción:</label>
+          <textarea
+            v-model="editedContent"
+            class="edit-textarea"
+            @keyup.esc="cancelEdit"
+            ref="contentTextarea"
+            placeholder="Descripción del proceso"
+            rows="3"
+          ></textarea>
+        </div>
+        <div class="editor-actions">
+          <button class="save-button" @click="saveChanges">Guardar</button>
+          <button class="cancel-button" @click="cancelEdit">Cancelar</button>
+        </div>
+      </div>
 
-    <div v-if="isEditing" class="edit-actions">
-      <button class="save-button" @click="saveChanges">Save</button>
-      <button class="cancel-button" @click="cancelEdit">Cancel</button>
+      <div class="process-container">
+        <div class="process-info">
+          <div class="process-header">
+            <div class="process-icon">⚙️</div>
+            <div class="process-label">PROCESO</div>
+          </div>
+          <div class="process-description">Ejecuta la operación definida</div>
+        </div>
+      </div>
     </div>
 
     <div class="node-handles">
@@ -146,149 +165,236 @@ export default {
 
 <style lang="scss" scoped>
 .custom-node {
-  min-width: 300px;
-  max-width: 300px;
-  background: #f0f0f0;
-  border-radius: 8px;
-  border: 1px solid #d0d0d0;
+  min-width: 280px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 
   &.selected {
-    border-color: #999999;
-    box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  &.editing {
+    border-color: #3B82F6;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
   }
 }
 
 .node-header {
   display: flex;
-  align-items: flex-start;
-  padding: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  background: #F3F4F6;
+  border-bottom: 1px solid #E5E7EB;
   gap: 12px;
 }
 
 .node-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #333333;
-  border-radius: 50%;
+  border-radius: 8px;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .node-number {
   color: white;
   font-weight: 600;
-  font-size: 18px;
-}
-
-.node-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  font-size: 16px;
 }
 
 .node-title {
-  font-weight: 600;
-  color: #333333;
-  font-size: 16px;
-  line-height: 1.2;
+  font-weight: 500;
+  color: #111827;
+  font-size: 14px;
+  flex-grow: 1;
 }
 
-.node-subtitle {
+.node-type {
   font-size: 12px;
-  color: #666666;
-  font-weight: 400;
+  color: #6B7280;
+  padding: 4px 8px;
+  background: #F9FAFB;
+  border-radius: 4px;
+  border: 1px solid #E5E7EB;
 }
 
 .node-content {
-  padding: 0 16px 16px 16px;
+  padding: 16px;
+}
+
+.content-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  cursor: text;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #F3F4F6;
+  }
+}
+
+.content-label {
+  font-weight: 600;
+  color: #3B82F6;
+  font-size: 12px;
+  padding: 2px 6px;
+  background: #EFF6FF;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .content-text {
-  font-size: 14px;
-  color: #555555;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  padding-left: 48px;
+  flex-grow: 1;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.content-editor {
+  margin-bottom: 16px;
+}
+
+.editor-row {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.editor-row label {
+  display: block;
+  font-weight: 500;
+  color: #374151;
+  font-size: 13px;
+  margin-bottom: 6px;
 }
 
 .edit-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #d0d0d0;
+  border: 1px solid #D1D5DB;
   border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333333;
-  background: white;
+  font-size: 13px;
+  background: #F9FAFB;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
-    border-color: #999999;
-    box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   }
 }
 
 .edit-textarea {
   width: 100%;
-  min-height: 80px;
   padding: 8px 12px;
-  border: 1px solid #d0d0d0;
+  border: 1px solid #D1D5DB;
   border-radius: 6px;
-  font-size: 14px;
-  color: #555555;
+  font-size: 13px;
   resize: vertical;
-  background: white;
-  margin-left: 48px;
-  margin-top: 8px;
+  min-height: 60px;
+  background: #F9FAFB;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
-    border-color: #999999;
-    box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2);
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   }
 }
 
-.edit-actions {
+.editor-actions {
   display: flex;
   gap: 8px;
-  padding: 8px 16px 16px;
   justify-content: flex-end;
+  margin-top: 12px;
 
   button {
     padding: 6px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &.save-button {
-      background: #333333;
+      background: #3B82F6;
       color: white;
       border: none;
 
       &:hover {
-        background: #555555;
+        background: #2563EB;
       }
     }
 
     &.cancel-button {
       background: white;
-      color: #666666;
-      border: 1px solid #d0d0d0;
+      color: #4B5563;
+      border: 1px solid #D1D5DB;
 
       &:hover {
-        background: #f8f8f8;
+        background: #F3F4F6;
       }
     }
   }
+}
+
+.process-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.process-info {
+  padding: 12px;
+  background: #EFF6FF;
+}
+
+.process-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.process-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3B82F6;
+  border-radius: 4px;
+  color: white;
+  font-size: 12px;
+}
+
+.process-label {
+  font-weight: 600;
+  color: #3B82F6;
+  font-size: 12px;
+}
+
+.process-description {
+  font-size: 12px;
+  color: #6B7280;
 }
 
 .node-handles {
@@ -303,28 +409,28 @@ export default {
     width: 12px;
     height: 12px;
     background: white;
-    border: 2px solid #666666;
+    border: 2px solid #3B82F6;
     border-radius: 50%;
     pointer-events: all;
     transition: all 0.2s ease;
 
     &:hover {
-      background: #f0f0f0;
+      background: #DBEAFE;
       transform: scale(1.2);
     }
 
     &.vue-flow__handle-connecting {
-      background: #666666;
+      background: #3B82F6;
     }
 
     &.vue-flow__handle-valid {
-      background: #4CAF50;
-      border-color: #2E7D32;
+      background: #10B981;
+      border-color: #059669;
     }
 
     &.vue-flow__handle-invalid {
-      background: #F44336;
-      border-color: #C62828;
+      background: #EF4444;
+      border-color: #DC2626;
     }
   }
 }
