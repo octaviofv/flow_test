@@ -128,12 +128,12 @@
     <div class="node-handles">
       <Handle
         type="target"
-        position="left"
+        position="top"
         id="input"
       />
       <Handle
         type="source"
-        position="right"
+        position="bottom"
         id="output"
       />
     </div>

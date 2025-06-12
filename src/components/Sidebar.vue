@@ -32,6 +32,7 @@
         </div>
       </div>
 
+      <!--
       <div
         class="draggable-node"
         draggable="true"
@@ -48,6 +49,7 @@
           </div>
         </div>
       </div>
+      -->
     </div>
   </div>
 </template>
