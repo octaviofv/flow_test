@@ -16,7 +16,7 @@
         :auto-connect="{ type: 'smoothstep' }"
         class="flowchart"
         :default-edge-options="defaultEdgeOptions"
-        direction="LR"
+        direction="TB"
         :snap-to-grid="true"
         :snap-grid="[20, 20]"
         @nodeClick="onNodeClick"
@@ -105,9 +105,13 @@ export default {
     });
 
     const defaultEdgeOptions = {
-      type: 'smoothstep',
-      animated: true,
-      style: { strokeWidth: 2 },
+      type: 'straight',
+      animated: false,
+      style: { 
+        strokeWidth: 2,
+        strokeDasharray: '5,5',
+        stroke: '#999999'
+      },
     };
 
     const { 
@@ -123,7 +127,7 @@ export default {
 
     const containerStyle = computed(() => ({
       height: props.content?.height || '600px',
-      backgroundColor: props.content?.backgroundColor || '#f5f5f5',
+      backgroundColor: props.content?.backgroundColor || '#fafafa',
     }));
 
     const defaultZoom = computed(() => props.content?.defaultZoom || 1);
@@ -131,37 +135,68 @@ export default {
     const maxZoom = computed(() => props.content?.maxZoom || 4);
     const backgroundGap = computed(() => props.content?.backgroundGap || 20);
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
-    const backgroundColor = computed(() => props.content?.backgroundColor || '#f5f5f5');
+    const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
 
     const defaultFlowData = {
       nodes: [
         {
-          id: 'process-1',
+          id: 'entrada-1',
           type: 'custom',
-          position: { x: 100, y: 150 },
+          position: { x: 300, y: 50 },
           data: {
-            label: 'Proceso Principal',
-            content: 'Descripción del proceso principal',
-            number: '1'
+            label: 'Entrada',
+            content: 'Información de entrada',
+            number: '1',
+            subTitle: 'Sin herramienta'
           }
         },
         {
-          id: 'condition-1',
-          type: 'conditional',
-          position: { x: 300, y: 150 },
+          id: 'proceso-1',
+          type: 'custom',
+          position: { x: 300, y: 200 },
           data: {
-            condition: 'value > 10',
-            label: 'Condición'
+            label: 'Proceso',
+            content: 'Procesamiento de información',
+            number: '2',
+            subTitle: 'Sin herramienta'
+          }
+        },
+        {
+          id: 'salida-1',
+          type: 'custom',
+          position: { x: 300, y: 350 },
+          data: {
+            label: 'Salida',
+            content: 'Información de salida',
+            number: '3',
+            subTitle: 'Sin herramienta'
           }
         }
       ],
       edges: [
         {
           id: 'edge-1',
-          source: 'process-1',
-          target: 'condition-1',
-          type: 'smoothstep',
-          animated: true
+          source: 'entrada-1',
+          target: 'proceso-1',
+          type: 'straight',
+          animated: false,
+          style: { 
+            strokeWidth: 2,
+            strokeDasharray: '5,5',
+            stroke: '#999999'
+          }
+        },
+        {
+          id: 'edge-2',
+          source: 'proceso-1',
+          target: 'salida-1',
+          type: 'straight',
+          animated: false,
+          style: { 
+            strokeWidth: 2,
+            strokeDasharray: '5,5',
+            stroke: '#999999'
+          }
         }
       ]
     };

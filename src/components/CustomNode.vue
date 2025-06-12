@@ -8,21 +8,23 @@
       <div class="node-icon">
         <div class="node-number">{{ data.number || '1' }}</div>
       </div>
-      <div class="node-title" v-if="!isEditing">{{ data.label || 'Action' }}</div>
-      <input
-        v-else
-        v-model="editedLabel"
-        class="edit-input"
-        @keyup.enter="saveChanges"
-        @keyup.esc="cancelEdit"
-        ref="labelInput"
-        placeholder="Enter title"
-      />
-      <div class="node-type">{{ data.type || 'Custom' }}</div>
+      <div class="node-info">
+        <div class="node-title" v-if="!isEditing">{{ data.label || 'Proceso' }}</div>
+        <input
+          v-else
+          v-model="editedLabel"
+          class="edit-input"
+          @keyup.enter="saveChanges"
+          @keyup.esc="cancelEdit"
+          ref="labelInput"
+          placeholder="Enter title"
+        />
+        <div class="node-subtitle">{{ data.subTitle || 'Sin herramienta' }}</div>
+      </div>
     </div>
     
     <div class="node-content">
-      <div class="content-text" v-if="!isEditing">{{ data.content || '' }}</div>
+      <div class="content-text" v-if="!isEditing">{{ data.content || 'Procesamiento de información' }}</div>
       <textarea
         v-else
         v-model="editedContent"
@@ -144,104 +146,112 @@ export default {
 
 <style lang="scss" scoped>
 .custom-node {
-  min-width: 280px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid #E5E7EB;
+  min-width: 300px;
+  max-width: 300px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
   overflow: hidden;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 
   &.selected {
-    border-color: #3B82F6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-color: #999999;
+    box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.3);
   }
 }
 
 .node-header {
   display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: #F9FAFB;
-  border-bottom: 1px solid #E5E7EB;
+  align-items: flex-start;
+  padding: 16px;
   gap: 12px;
 }
 
 .node-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #3B82F6;
-  border-radius: 8px;
+  background: #333333;
+  border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .node-number {
   color: white;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 18px;
+}
+
+.node-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .node-title {
-  font-weight: 500;
-  color: #111827;
-  font-size: 14px;
-  flex-grow: 1;
+  font-weight: 600;
+  color: #333333;
+  font-size: 16px;
+  line-height: 1.2;
 }
 
-.node-type {
+.node-subtitle {
   font-size: 12px;
-  color: #6B7280;
-  padding: 4px 8px;
-  background: #F3F4F6;
-  border-radius: 4px;
+  color: #666666;
+  font-weight: 400;
 }
 
 .node-content {
-  padding: 12px 16px;
+  padding: 0 16px 16px 16px;
 }
 
 .content-text {
   font-size: 14px;
-  color: #4B5563;
-  line-height: 1.5;
+  color: #555555;
+  line-height: 1.4;
   white-space: pre-wrap;
+  padding-left: 48px;
 }
 
 .edit-input {
-  flex-grow: 1;
-  padding: 6px 8px;
-  border: 1px solid #D1D5DB;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
   border-radius: 6px;
-  font-size: 14px;
-  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333333;
   background: white;
-  margin-right: 8px;
 
   &:focus {
     outline: none;
-    border-color: #3B82F6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    border-color: #999999;
+    box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2);
   }
 }
 
 .edit-textarea {
   width: 100%;
   min-height: 80px;
-  padding: 8px;
-  border: 1px solid #D1D5DB;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
   border-radius: 6px;
   font-size: 14px;
-  color: #111827;
+  color: #555555;
   resize: vertical;
   background: white;
+  margin-left: 48px;
+  margin-top: 8px;
 
   &:focus {
     outline: none;
-    border-color: #3B82F6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    border-color: #999999;
+    box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2);
   }
 }
 
@@ -260,22 +270,22 @@ export default {
     transition: all 0.2s ease;
 
     &.save-button {
-      background: #3B82F6;
+      background: #333333;
       color: white;
       border: none;
 
       &:hover {
-        background: #2563EB;
+        background: #555555;
       }
     }
 
     &.cancel-button {
       background: white;
-      color: #4B5563;
-      border: 1px solid #D1D5DB;
+      color: #666666;
+      border: 1px solid #d0d0d0;
 
       &:hover {
-        background: #F3F4F6;
+        background: #f8f8f8;
       }
     }
   }
@@ -293,28 +303,28 @@ export default {
     width: 12px;
     height: 12px;
     background: white;
-    border: 2px solid #3B82F6;
+    border: 2px solid #666666;
     border-radius: 50%;
     pointer-events: all;
     transition: all 0.2s ease;
 
     &:hover {
-      background: #DBEAFE;
+      background: #f0f0f0;
       transform: scale(1.2);
     }
 
     &.vue-flow__handle-connecting {
-      background: #3B82F6;
+      background: #666666;
     }
 
     &.vue-flow__handle-valid {
-      background: #10B981;
-      border-color: #059669;
+      background: #4CAF50;
+      border-color: #2E7D32;
     }
 
     &.vue-flow__handle-invalid {
-      background: #EF4444;
-      border-color: #DC2626;
+      background: #F44336;
+      border-color: #C62828;
     }
   }
 }

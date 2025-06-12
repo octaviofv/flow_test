@@ -8,9 +8,9 @@
         @dragstart="onDragStart($event, 'custom', 'process')"
       >
         <div class="preview-node">
-          <div class="preview-number">P</div>
+          <div class="preview-number">N</div>
           <div class="preview-content">
-            <span>Proceso</span>
+            <span>Nuevo Proceso</span>
           </div>
         </div>
       </div>
@@ -64,10 +64,11 @@ export default {
 
       if (nodeType === 'custom') {
         nodeData.data = {
-          label: 'Nuevo Proceso',
-          content: 'Descripción del proceso',
-          number: 'P',
-          backgroundColor: '#ffffff'
+          label: 'Proceso',
+          content: 'Procesamiento de información',
+          number: '1',
+          backgroundColor: '#f0f0f0',
+          subTitle: 'Sin herramienta'
         };
       } else if (nodeType === 'comment') {
         nodeData.data = {
@@ -97,16 +98,17 @@ export default {
 .sidebar {
   width: 280px;
   background: #ffffff;
-  border-right: 1px solid #eaeaea;
+  border-right: 1px solid #e0e0e0;
   padding: 20px;
   height: 100%;
   overflow-y: auto;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: #262627;
+  color: #333333;
   margin-bottom: 20px;
 }
 
@@ -125,18 +127,18 @@ export default {
 }
 
 .preview-node {
-  padding: 12px;
-  background: #ffffff;
-  border: 2px solid #eaeaea;
-  border-radius: 12px;
+  padding: 16px;
+  background: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: #0445AF;
-    background: #f8f9fa;
+    background: #f0f0f0;
+    border-color: #d0d0d0;
   }
 
   &.comment-node .preview-number {
@@ -149,21 +151,21 @@ export default {
 }
 
 .preview-number {
-  width: 28px;
-  height: 28px;
-  background-color: #0445AF;
+  width: 32px;
+  height: 32px;
+  background-color: #333333;
   color: white;
-  border-radius: 50%;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .preview-content {
   font-size: 14px;
-  color: #262627;
+  color: #333333;
   font-weight: 500;
 }
 </style>
