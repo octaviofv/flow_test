@@ -1,4 +1,41 @@
 export default {
+  initialNodeValue: {
+    label: { en: 'Initial Node Value' },
+    type: 'Text',
+    section: 'settings',
+    bindable: true,
+    defaultValue: 'Nodo Inicial'
+  },
+
+  flowData: {
+    label: { en: 'Flow Data' },
+    type: 'Text',
+    section: 'settings',
+    bindable: true,
+    defaultValue: JSON.stringify({
+      "nodes": [
+        {
+          "id": "input",
+          "type": "custom",
+          "position": { "x": 60, "y": 20 },
+          "size": { "width": 280, "height": 100 },
+          "data": {
+            "label": "Entrada",
+            "content": "Información de entrada",
+            "number": "1",
+            "backgroundColor": "#E3F2FD",
+            "toolName": "Sin herramienta"
+          },
+          "handles": {
+            "source": ["bottom"],
+            "target": ["top"]
+          }
+        }
+      ],
+      "edges": []
+    }, null, 2)
+  },
+
   backgroundColor: {
     label: { en: 'Background Color' },
     type: 'Color',
@@ -34,23 +71,6 @@ export default {
     },
     propertyHelp: {
       tooltip: 'Set the spacing between background grid lines',
-    },
-    /* wwEditor:end */
-  },
-
-  initialNodeValue: {
-    label: { en: 'Initial Node Value' },
-    type: 'Text',
-    section: 'settings',
-    bindable: true,
-    defaultValue: 'Nodo Inicial',
-    /* wwEditor:start */
-    bindingValidation: {
-      type: 'string',
-      tooltip: 'Set the initial value/text that will be displayed in new nodes',
-    },
-    propertyHelp: {
-      tooltip: 'Define the default text content for new nodes in the flow chart',
     },
     /* wwEditor:end */
   },

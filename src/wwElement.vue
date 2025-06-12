@@ -181,7 +181,11 @@ export default {
     const backgroundGap = computed(() => props.content?.backgroundGap || 20);
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
     const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
-    const initialNodeValue = computed(() => props.content?.initialNodeValue || 'Nodo Inicial');
+    const initialNodeValue = computed(() => {
+      console.log('WeWeb props.content:', props.content);
+      console.log('initialNodeValue from props:', props.content?.initialNodeValue);
+      return props.content?.initialNodeValue || 'Nodo Inicial';
+    });
 
     const defaultFlowData = {
       nodes: [
