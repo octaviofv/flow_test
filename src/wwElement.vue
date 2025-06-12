@@ -175,28 +175,60 @@ export default {
       backgroundColor: props.content?.backgroundColor || '#fafafa',
     }));
 
-    const defaultZoom = computed(() => props.content?.defaultZoom || 1);
+    const defaultZoom = computed(() => {
+      console.log('DEBUG defaultZoom:', props.content?.defaultZoom, typeof props.content?.defaultZoom);
+      return props.content?.defaultZoom || 1;
+    });
     const minZoom = computed(() => props.content?.minZoom || 0.1);
     const maxZoom = computed(() => props.content?.maxZoom || 4);
-    const backgroundGap = computed(() => props.content?.backgroundGap || 20);
+    const backgroundGap = computed(() => {
+      console.log('DEBUG backgroundGap:', props.content?.backgroundGap, typeof props.content?.backgroundGap);
+      return props.content?.backgroundGap || 20;
+    });
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
-    const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
+    const backgroundColor = computed(() => {
+      console.log('DEBUG backgroundColor:', props.content?.backgroundColor, typeof props.content?.backgroundColor);
+      return props.content?.backgroundColor || '#fafafa';
+    });
     const initialNodeValue = computed(() => {
       console.log('=== DEBUG initialNodeValue ===');
       console.log('Full props.content:', props.content);
-      console.log('props.content.initialNodeValue:', props.content?.initialNodeValue);
-      console.log('typeof initialNodeValue:', typeof props.content?.initialNodeValue);
-      console.log('toolName for comparison:', props.content?.toolName);
-      console.log('typeof toolName:', typeof props.content?.toolName);
       
-      // Intentar diferentes maneras de acceder al valor
-      const value = props.content?.initialNodeValue;
+      // Intentar diferentes formas de acceso
+      const directAccess = props.content?.initialNodeValue;
+      const bracketAccess = props.content?.['initialNodeValue'];
+      const contentKeys = Object.keys(props.content || {});
+      
+      console.log('Direct access:', directAccess);
+      console.log('Bracket access:', bracketAccess);
+      console.log('Available keys:', contentKeys);
+      console.log('Keys includes initialNodeValue:', contentKeys.includes('initialNodeValue'));
+      
+      // Intentar acceder sin optional chaining
+      let withoutOptional;
+      try {
+        withoutOptional = props.content.initialNodeValue;
+      } catch (e) {
+        withoutOptional = 'error';
+      }
+      console.log('Without optional chaining:', withoutOptional);
+      
+      // Intentar con Reflection
+      let reflected;
+      try {
+        reflected = Reflect.get(props.content, 'initialNodeValue');
+      } catch (e) {
+        reflected = 'error';
+      }
+      console.log('Reflected access:', reflected);
+      
       const fallback = 'Nodo Inicial';
+      const finalValue = directAccess || bracketAccess || withoutOptional || reflected || fallback;
       
-      console.log('Final value:', value || fallback);
+      console.log('Final value:', finalValue);
       console.log('=== END DEBUG ===');
       
-      return value || fallback;
+      return finalValue;
     });
 
     const defaultFlowData = {
