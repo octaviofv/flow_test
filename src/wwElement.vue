@@ -1,89 +1,43 @@
 <template>
   <div class="flowchart-container" :style="containerStyle">
     <div class="flowchart-wrapper">
-      <Sidebar class="flowchart-sidebar" />
-      <VueFlow
-        v-if="initialized"
-        v-model="elements"
-        :default-zoom="defaultZoom"
-        :min-zoom="minZoom"
-        :max-zoom="maxZoom"
-        :fit-view-on-init="true"
-        :nodes-draggable="!isEditing"
-        :nodes-connectable="!isEditing"
-        :elements-selectable="!isEditing"
-        :default-viewport="{ x: 0, y: 0, zoom: 1 }"
-        :auto-connect="{ type: 'smoothstep' }"
-        class="flowchart"
-        :default-edge-options="defaultEdgeOptions"
-        direction="TB"
-        :snap-to-grid="true"
-        :snap-grid="[20, 20]"
-        @nodeClick="onNodeClick"
-        @connect="onConnect"
-        @paneClick="onPaneClick"
-        @dragover="onDragOver"
-        @drop="onDrop"
-        @nodeDragStop="onNodeDragStop"
-        @nodesDelete="onNodesDelete"
-        @edgesDelete="onEdgesDelete"
-      >
-        <template #node-custom="nodeProps">
-          <CustomNode v-bind="nodeProps" @update:data="onNodeDataUpdate" />
-        </template>
-        <template #node-comment="nodeProps">
-          <CommentNode v-bind="nodeProps" @update:data="onNodeDataUpdate" />
-        </template>
-        <template #node-conditional="nodeProps">
-          <ConditionalNode v-bind="nodeProps" @update:data="onNodeDataUpdate" />
-        </template>
+      <Sidebar class="flowchart-sidebar" :available-tools="content.toolOptions" />
+      <div class="vue-flow-wrapper" ref="flowWrapper">
+        <VueFlow
+          v-if="initialized"
+          v-model="elements"
+          :default-zoom="defaultZoom"
+          :min-zoom="minZoom"
+          :max-zoom="maxZoom"
+          :fit-view-on-init="true"
+          :node-types="nodeTypes"
+          :default-edge-options="defaultEdgeOptions"
+          class="flowchart"
+          @node-click="onNodeClick"
+          @connect="onConnect"
+          @pane-click="onPaneClick"
+          @dragover="onDragOver"
+          @drop="onDrop"
+          @node-drag-stop="onNodeDragStop"
+          @edges-delete="onEdgesDelete"
+          @nodes-delete="onNodesDelete"
+        >
+          <Background :pattern-color="backgroundColor" :gap="backgroundGap" />
+          <Controls />
+          <MiniMap v-if="showMinimap" />
+        </VueFlow>
+      </div>
 
-        <Background :pattern-color="backgroundColor" :gap="backgroundGap" />
-        <Controls />
-        <MiniMap v-if="showMinimap" />
-        
-        <!-- Controles de Zoom personalizados -->
-        <Panel class="zoom-controls" position="bottom-right">
-          <button 
-            @click="zoomIn" 
-            class="zoom-btn zoom-in"
-            title="Acercar"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-              <line x1="11" y1="8" x2="11" y2="14"></line>
-              <line x1="8" y1="11" x2="14" y2="11"></line>
-            </svg>
-          </button>
-          <button 
-            @click="zoomOut" 
-            class="zoom-btn zoom-out"
-            title="Alejar"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-              <line x1="8" y1="11" x2="14" y2="11"></line>
-            </svg>
-          </button>
-          <button 
-            @click="fitViewToContent" 
-            class="zoom-btn fit-view"
-            title="Ajustar vista"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-            </svg>
-          </button>
-        </Panel>
-      </VueFlow>
+      <div class="zoom-controls">
+        <button class="zoom-button" @click="zoomIn" title="Acercar">+</button>
+        <button class="zoom-button" @click="zoomOut" title="Alejar">-</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { 
   VueFlow, 
   useVueFlow,
@@ -92,15 +46,19 @@ import {
   MiniMap, 
   Panel 
 } from '@vue-flow/core';
+import { v4 as uuidv4 } from 'uuid';
+
+// Import custom components
+import CustomNode from './components/CustomNode.vue';
+import NodeEditor from './components/NodeEditor.vue';
+import Sidebar from './components/Sidebar.vue';
+
+// Import styles
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/controls/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
-import CustomNode from './components/CustomNode.vue';
-import CommentNode from './components/CommentNode.vue';
-import ConditionalNode from './components/ConditionalNode.vue';
-import Sidebar from './components/Sidebar.vue';
-
+  
 export default {
   name: 'FlowChart',
   components: {
@@ -108,10 +66,7 @@ export default {
     Background,
     Controls,
     MiniMap,
-    Panel,
     CustomNode,
-    CommentNode,
-    ConditionalNode,
     Sidebar,
   },
   props: {
@@ -132,6 +87,7 @@ export default {
     const initialized = ref(false);
     const elements = ref([]);
     const selectedNode = ref(null);
+    const flowWrapper = ref(null);
 
     const isEditing = computed(() => {
       /* wwEditor:start */
@@ -140,190 +96,182 @@ export default {
       return false;
     });
 
-    const defaultEdgeOptions = {
+    // Node types registration
+    const nodeTypes = {
+      custom: CustomNode
+    };
+
+    const defaultEdgeOptions = computed(() => ({
       type: 'smoothstep',
       animated: true,
-      style: { 
-        strokeWidth: 2,
-        stroke: '#3B82F6'
-      },
       markerEnd: {
-        type: 'arrowclosed',
+        type: 'arrow',
+        color: '#37352F',
         width: 20,
         height: 20,
-        color: '#3B82F6',
       },
-    };
+    }));
 
     const { 
       findNode, 
       addNodes, 
       addEdges, 
+      getNodes, 
+      getEdges,
+      setNodes,
+      setEdges,
       removeNodes, 
-      project,
-      fitView,
-      zoomIn: vueFlowZoomIn,
+      removeEdges,
+      project, 
+      zoomIn: vueFlowZoomIn, 
       zoomOut: vueFlowZoomOut,
-      zoomTo,
-      getViewport,
-    } = useVueFlow({
-      defaultEdgeOptions,
-    });
+      updateNode
+    } = useVueFlow();
 
     const containerStyle = computed(() => ({
       height: props.content?.height || '600px',
-      backgroundColor: props.content?.backgroundColor || '#fafafa',
+      backgroundColor: props.content?.backgroundColor || '#f5f5f5',
+      position: 'relative',
+      overflow: 'hidden'
     }));
 
-    const defaultZoom = computed(() => {
-      console.log('DEBUG defaultZoom:', props.content?.defaultZoom, typeof props.content?.defaultZoom);
-      return props.content?.defaultZoom || 1;
-    });
+    const defaultZoom = computed(() => props.content?.defaultZoom || 1);
     const minZoom = computed(() => props.content?.minZoom || 0.1);
     const maxZoom = computed(() => props.content?.maxZoom || 4);
-    const backgroundGap = computed(() => {
-      console.log('DEBUG backgroundGap:', props.content?.backgroundGap, typeof props.content?.backgroundGap);
-      return props.content?.backgroundGap || 20;
-    });
+    const backgroundGap = computed(() => props.content?.backgroundGap || 20);
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
-    const backgroundColor = computed(() => {
-      console.log('DEBUG backgroundColor:', props.content?.backgroundColor, typeof props.content?.backgroundColor);
-      return props.content?.backgroundColor || '#fafafa';
-    });
-    const initialNodeValue = computed(() => {
-      console.log('=== DEBUG initialNodeValue ===');
-      console.log('Full props.content:', props.content);
-      
-      // Intentar diferentes formas de acceso
-      const directAccess = props.content?.initialNodeValue;
-      const bracketAccess = props.content?.['initialNodeValue'];
-      const contentKeys = Object.keys(props.content || {});
-      
-      console.log('Direct access:', directAccess);
-      console.log('Bracket access:', bracketAccess);
-      console.log('Available keys:', contentKeys);
-      console.log('Keys includes initialNodeValue:', contentKeys.includes('initialNodeValue'));
-      
-      // Intentar acceder sin optional chaining
-      let withoutOptional;
-      try {
-        withoutOptional = props.content.initialNodeValue;
-      } catch (e) {
-        withoutOptional = 'error';
-      }
-      console.log('Without optional chaining:', withoutOptional);
-      
-      // Intentar con Reflection
-      let reflected;
-      try {
-        reflected = Reflect.get(props.content, 'initialNodeValue');
-      } catch (e) {
-        reflected = 'error';
-      }
-      console.log('Reflected access:', reflected);
-      
-      const fallback = 'Nodo Inicial';
-      const finalValue = directAccess || bracketAccess || withoutOptional || reflected || fallback;
-      
-      console.log('Final value:', finalValue);
-      console.log('=== END DEBUG ===');
-      
-      return finalValue;
-    });
+    const backgroundColor = computed(() => props.content?.backgroundColor || '#f5f5f5');
+    const initialNodeValue = computed(() => props.content?.initialNodeValue || 'Nodo Inicial');
 
-    const defaultFlowData = {
+    const zoomIn = () => {
+      vueFlowZoomIn();
+    };
+
+    const zoomOut = () => {
+      vueFlowZoomOut();
+    };
+
+    // Default flow structure
+    const defaultFlow = {
       nodes: [
         {
-          id: 'entrada-1',
+          id: 'input',
           type: 'custom',
-          position: { x: 300, y: 50 },
+          position: { x: 100, y: 100 },
           data: {
             label: 'Entrada',
             content: initialNodeValue.value,
             number: '1',
-            subTitle: 'Sin herramienta'
+            backgroundColor: '#E3F2FD'
           }
         },
         {
-          id: 'proceso-1',
+          id: 'process',
           type: 'custom',
-          position: { x: 300, y: 200 },
+          position: { x: 400, y: 100 },
           data: {
             label: 'Proceso',
             content: 'Procesamiento de información',
             number: '2',
-            subTitle: 'Sin herramienta'
+            backgroundColor: '#F3E5F5'
           }
         },
         {
-          id: 'salida-1',
+          id: 'output',
           type: 'custom',
-          position: { x: 300, y: 350 },
+          position: { x: 700, y: 100 },
           data: {
             label: 'Salida',
             content: 'Información de salida',
             number: '3',
-            subTitle: 'Sin herramienta'
+            backgroundColor: '#E8F5E9'
           }
         }
       ],
       edges: [
         {
-          id: 'edge-1',
-          source: 'entrada-1',
-          target: 'proceso-1',
+          id: 'e1-2',
+          source: 'input',
+          target: 'process',
           type: 'smoothstep',
           animated: true,
-          style: { 
-            strokeWidth: 2,
-            stroke: '#3B82F6'
-          },
           markerEnd: {
-            type: 'arrowclosed',
+            type: 'arrow',
+            color: '#37352F',
             width: 20,
             height: 20,
-            color: '#3B82F6',
           }
         },
         {
-          id: 'edge-2',
-          source: 'proceso-1',
-          target: 'salida-1',
+          id: 'e2-3',
+          source: 'process',
+          target: 'output',
           type: 'smoothstep',
           animated: true,
-          style: { 
-            strokeWidth: 2,
-            stroke: '#3B82F6'
-          },
           markerEnd: {
-            type: 'arrowclosed',
+            type: 'arrow',
+            color: '#37352F',
             width: 20,
             height: 20,
-            color: '#3B82F6',
           }
         }
       ]
     };
 
-    const updateFlowData = () => {
-      const nodes = elements.value.filter(el => !el.source);
-      const edges = elements.value.filter(el => el.source);
+    // Watch for changes in content.flowData
+    watch(() => props.content.flowData, (newFlowData) => {
+      if (!newFlowData) return;
+      
+      try {
+        const parsedData = typeof newFlowData === 'string' 
+          ? JSON.parse(newFlowData) 
+          : newFlowData;
 
+        if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
+          // Ensure all nodes have the correct type
+          const nodes = parsedData.nodes.map(node => ({
+            ...node,
+            type: 'custom',
+            data: {
+              ...node.data,
+              label: node.data?.label || 'Unnamed Node',
+              content: node.data?.content || '',
+              backgroundColor: node.data?.backgroundColor || '#ffffff',
+            }
+          }));
+          
+          setNodes(nodes);
+        }
+        
+        if (parsedData.edges && Array.isArray(parsedData.edges)) {
+          setEdges(parsedData.edges);
+        }
+      } catch (error) {
+        console.error('Error parsing flow data:', error);
+      }
+    }, { deep: true });
+
+    // Update flowData when nodes or edges change
+    watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
       const flowData = {
         nodes,
         edges
       };
 
-      const updatedContent = {
-        ...props.content,
-        flowData: JSON.stringify(flowData, null, 2)
-      };
-
-      emit('update:content', updatedContent);
-    };
-
-    watch(elements, () => {
-      updateFlowData();
+      const stringifiedData = JSON.stringify(flowData);
+      
+      if (stringifiedData !== props.content.flowData) {
+        const updatedContent = {
+          ...props.content,
+          flowData: stringifiedData
+        };
+        emit('update:content', updatedContent);
+        // Emit flowSaved event with the updated flow data
+        emit('trigger-event', { 
+          name: 'flowSaved', 
+          event: { flowData }
+        });
+      }
     }, { deep: true });
 
     onMounted(() => {
@@ -333,29 +281,40 @@ export default {
             ? JSON.parse(props.content.flowData) 
             : props.content.flowData;
           
-          elements.value = [
-            ...parsedData.nodes,
-            ...parsedData.edges
-          ];
+          if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
+            // Ensure all nodes have the correct type
+            const nodes = parsedData.nodes.map(node => ({
+              ...node,
+              type: 'custom',
+              data: {
+                ...node.data,
+                label: node.data?.label || 'Unnamed Node',
+                content: node.data?.content || '',
+                backgroundColor: node.data?.backgroundColor || '#ffffff',
+              }
+            }));
+            
+            setNodes(nodes);
+          }
+          
+          if (parsedData.edges && Array.isArray(parsedData.edges)) {
+            setEdges(parsedData.edges);
+          }
         } else {
-          elements.value = [
-            ...defaultFlowData.nodes,
-            ...defaultFlowData.edges
-          ];
+          // Use default flow
+          setNodes(defaultFlow.nodes);
+          setEdges(defaultFlow.edges);
         }
-        initialized.value = true;
         
-        setTimeout(() => {
-          fitView({ padding: 0.2 });
-        }, 100);
+        initialized.value = true;
       } catch (error) {
         console.error('Error initializing flow data:', error);
-        elements.value = [];
+        // Fallback to default flow
+        setNodes(defaultFlow.nodes);
+        setEdges(defaultFlow.edges);
         initialized.value = true;
       }
     });
-
-    const generateId = () => `node_${Date.now()}`;
 
     const onDragOver = (event) => {
       event.preventDefault();
@@ -363,21 +322,47 @@ export default {
     };
 
     const onDrop = (event) => {
-      const data = JSON.parse(event.dataTransfer.getData('application/vueflow'));
-      const position = project({ x: event.clientX, y: event.clientY });
-
-      const newNode = {
-        id: generateId(),
-        ...data,
-        position,
-        data: {
-          ...data.data,
-          content: data.data?.content || initialNodeValue.value,
-        }
-      };
-
-      addNodes([newNode]);
-      emit('trigger-event', { name: 'nodeAdded', event: { node: newNode } });
+      if (!isEditing.value) return;
+      
+      event.preventDefault();
+      
+      const data = event.dataTransfer.getData('application/vueflow');
+      if (!data) return;
+      
+      try {
+        const nodeTemplate = JSON.parse(data);
+        
+        // Get the drop position in the pane coordinates
+        const bounds = flowWrapper.value.getBoundingClientRect();
+        const position = project({
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top
+        });
+        
+        // Create a new node using initialNodeValue
+        const newNode = {
+          id: `node-${uuidv4()}`,
+          type: 'custom',
+          position,
+          data: {
+            ...nodeTemplate,
+            label: nodeTemplate.label || 'New Node',
+            content: nodeTemplate.content || initialNodeValue.value,
+            backgroundColor: nodeTemplate.backgroundColor || '#ffffff',
+            width: 200,
+            height: 100
+          }
+        };
+        
+        addNodes([newNode]);
+        
+        emit('trigger-event', {
+          name: 'nodeAdded',
+          event: { node: newNode }
+        });
+      } catch (error) {
+        console.error('Error adding node:', error);
+      }
     };
 
     const onNodeClick = (event, node) => {
@@ -388,10 +373,16 @@ export default {
     const onConnect = (connection) => {
       if (connection?.source && connection?.target) {
         const newEdge = {
-          id: `edge-${connection.source}-${connection.target}`,
+          id: `edge-${uuidv4()}`,
           ...connection,
           type: 'smoothstep',
           animated: true,
+          markerEnd: {
+            type: 'arrow',
+            color: '#37352F',
+            width: 20,
+            height: 20,
+          },
         };
         
         addEdges([newEdge]);
@@ -405,64 +396,52 @@ export default {
     };
 
     const onNodeDragStop = (event, node) => {
-      const updatedNode = findNode(node.id);
-      if (updatedNode) {
-        emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
-      }
+      updateNode(node.id, { position: node.position });
+      
+      emit('trigger-event', {
+        name: 'nodeMoved',
+        event: { node }
+      });
     };
 
     const onNodesDelete = (nodes) => {
-      nodes.forEach(node => {
-        emit('trigger-event', { name: 'nodeDeleted', event: { nodeId: node.id } });
+      emit('trigger-event', {
+        name: 'nodesDeleted',
+        event: { nodes }
       });
     };
 
     const onEdgesDelete = (edges) => {
-      edges.forEach(edge => {
-        emit('trigger-event', { name: 'edgeDeleted', event: { edgeId: edge.id } });
+      emit('trigger-event', {
+        name: 'edgesDeleted',
+        event: { edges }
       });
     };
 
     const onNodeDataUpdate = (nodeId, newData) => {
       const node = findNode(nodeId);
       if (node) {
-        node.data = { ...node.data, ...newData };
-        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
+        updateNode(nodeId, {
+          data: {
+            ...node.data,
+            ...newData
+          }
+        });
+        
+        emit('trigger-event', {
+          name: 'nodeUpdated',
+          event: { node: findNode(nodeId) }
+        });
       }
-    };
-
-    const deleteSelected = () => {
-      if (selectedNode.value) {
-        removeNodes([selectedNode.value.id]);
-        selectedNode.value = null;
-        emit('trigger-event', { name: 'nodeDeleted' });
-      }
-    };
-
-    const updateNodeData = (nodeId, data) => {
-      const node = findNode(nodeId);
-      if (node) {
-        node.data = { ...node.data, ...data };
-        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
-      }
-    };
-
-    const zoomIn = () => {
-      vueFlowZoomIn();
-    };
-
-    const zoomOut = () => {
-      vueFlowZoomOut();
-    };
-
-    const fitViewToContent = () => {
-      fitView({ padding: 0.2, duration: 300 });
     };
 
     return {
       elements,
       initialized,
       isEditing,
+      flowWrapper,
+      nodeTypes,
+      defaultEdgeOptions,
       containerStyle,
       defaultZoom,
       minZoom,
@@ -471,12 +450,9 @@ export default {
       showMinimap,
       backgroundColor,
       initialNodeValue,
-      defaultEdgeOptions,
       onNodeClick,
       onConnect,
       onPaneClick,
-      deleteSelected,
-      updateNodeData,
       onDragOver,
       onDrop,
       onNodeDragStop,
@@ -485,7 +461,6 @@ export default {
       onNodeDataUpdate,
       zoomIn,
       zoomOut,
-      fitViewToContent,
     };
   },
 };
@@ -494,32 +469,30 @@ export default {
 <style lang="scss" scoped>
 .flowchart-container {
   width: 100%;
-  position: relative;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid #E9E9E8;
+  border-radius: 4px;
   overflow: hidden;
+  padding-left: 64px;
+  transition: padding-left 0.3s ease;
 }
 
 .flowchart-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
+  background: #FFFFFF;
 }
 
-.flowchart-sidebar {
-  flex-shrink: 0;
+.vue-flow-wrapper {
+  flex-grow: 1;
   height: 100%;
-  border-right: 1px solid #ddd;
-  order: 1;
+  width: 100%;
 }
 
 .flowchart {
-  flex-grow: 1;
+  width: 100%;
   height: 100%;
-  order: 2;
 
   :deep(.vue-flow__node) {
     width: auto;
@@ -527,71 +500,76 @@ export default {
   }
 
   :deep(.vue-flow__handle) {
-    width: 8px;
-    height: 8px;
-    background: #2196F3;
-    border: 2px solid white;
+    width: 6px;
+    height: 6px;
+    background: #37352F;
+    border: 2px solid #FFFFFF;
   }
 
   :deep(.vue-flow__edge-path) {
-    stroke: #2196F3;
-    stroke-width: 2;
+    stroke: #37352F;
+    stroke-width: 1;
+  }
+
+  :deep(.vue-flow__controls) {
+    border: 1px solid #E9E9E8;
+    box-shadow: none;
+    background: #FFFFFF;
+    
+    button {
+      background: #F7F6F3;
+      border: none;
+      color: #37352F;
+      
+      &:hover {
+        background: #E9E9E8;
+      }
+    }
+  }
+
+  :deep(.vue-flow__minimap) {
+    background-color: #F7F6F3;
+    border: 1px solid #E9E9E8;
   }
 }
 
+.flowchart-sidebar {
+  flex-shrink: 0;
+  height: 100%;
+}
+
 .zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  padding: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  gap: 8px;
+  z-index: 0;
+}
 
-  .zoom-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: white;
-    border: 1px solid #e1e5e9;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #374151;
+.zoom-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #FFFFFF;
+  border: 1px solid #E9E9E8;
+  color: #37352F;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
 
-    &:hover {
-      background: #f3f4f6;
-      border-color: #d1d5db;
-      color: #111827;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    svg {
-      width: 16px;
-      height: 16px;
-      stroke-width: 2;
-    }
+  &:hover {
+    background: #F7F6F3;
+    border-color: #37352F;
   }
 
-  .zoom-in svg {
-    color: #10b981;
-  }
-
-  .zoom-out svg {
-    color: #f59e0b;
-  }
-
-  .fit-view svg {
-    color: #3b82f6;
+  &:active {
+    background: #E9E9E8;
   }
 }
 </style>

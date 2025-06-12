@@ -6,6 +6,23 @@ export default {
     icon: 'workflow',
   },
   properties: {
+    initialNodeValue: {
+      label: { en: 'Initial Node Value' },
+      type: 'Text',
+      section: 'settings',
+      bindable: true,
+      defaultValue: 'Nodo Inicial',
+      /* wwEditor:start */
+      bindingValidation: {
+        type: 'string',
+        tooltip: 'The initial value/text that will be displayed in new nodes',
+      },
+      propertyHelp: {
+        tooltip: 'Set the initial value/text that will be displayed in new nodes',
+      },
+      /* wwEditor:end */
+    },
+
     backgroundColor: {
       label: { en: 'Background Color' },
       type: 'Color',
@@ -109,23 +126,6 @@ export default {
       },
       propertyHelp: {
         tooltip: 'Set the name of the tool used in this process step',
-      },
-      /* wwEditor:end */
-    },
-
-    initialNodeValue: {
-      label: { en: 'Initial Node Value' },
-      type: 'Text',
-      section: 'settings',
-      bindable: true,
-      defaultValue: 'Nodo Inicial',
-      /* wwEditor:start */
-      bindingValidation: {
-        type: 'string',
-        tooltip: 'The initial value/text that will be displayed in new nodes',
-      },
-      propertyHelp: {
-        tooltip: 'Set the initial value/text that will be displayed in new nodes',
       },
       /* wwEditor:end */
     },
