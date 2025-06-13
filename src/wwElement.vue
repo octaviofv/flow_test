@@ -38,9 +38,7 @@
           <ConditionalNode v-bind="nodeProps" @update:data="onNodeDataUpdate" />
         </template>
 
-        <Background :pattern-color="backgroundColor" :gap="backgroundGap" />
-        <Controls />
-        <MiniMap v-if="showMinimap" />
+
       </VueFlow>
     </div>
   </div>
@@ -49,14 +47,8 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
-import { Background } from '@vue-flow/background';
-import { Controls } from '@vue-flow/controls';
-import { MiniMap } from '@vue-flow/minimap';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
-import '@vue-flow/background/dist/style.css';
-import '@vue-flow/controls/dist/style.css';
-import '@vue-flow/minimap/dist/style.css';
 import CustomNode from './components/CustomNode.vue';
 import CommentNode from './components/CommentNode.vue';
 import ConditionalNode from './components/ConditionalNode.vue';
@@ -66,9 +58,6 @@ export default {
   name: 'FlowChart',
   components: {
     VueFlow,
-    Background,
-    Controls,
-    MiniMap,
     CustomNode,
     CommentNode,
     ConditionalNode,
