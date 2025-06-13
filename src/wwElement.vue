@@ -123,15 +123,12 @@ export default {
 
     const containerStyle = computed(() => ({
       height: props.content?.height || '600px',
-      backgroundColor: props.content?.backgroundColor || '#fafafa',
+      backgroundColor: '#fafafa',
     }));
 
     const defaultZoom = computed(() => props.content?.defaultZoom || 1);
     const minZoom = computed(() => props.content?.minZoom || 0.1);
     const maxZoom = computed(() => props.content?.maxZoom || 4);
-    const backgroundGap = computed(() => props.content?.backgroundGap || 20);
-    const showMinimap = computed(() => props.content?.showMinimap ?? true);
-    const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
     const initialNodeValue = computed(() => props.content?.initialNodeValue || {
       "nodes": [
         {
@@ -940,9 +937,7 @@ export default {
       defaultZoom,
       minZoom,
       maxZoom,
-      backgroundGap,
-      showMinimap,
-      backgroundColor,
+
       initialNodeValue,
       defaultEdgeOptions,
       onNodeClick,
