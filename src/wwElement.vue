@@ -181,81 +181,92 @@ export default {
     const backgroundGap = computed(() => props.content?.backgroundGap || 20);
     const showMinimap = computed(() => props.content?.showMinimap ?? true);
     const backgroundColor = computed(() => props.content?.backgroundColor || '#fafafa');
-    const initialNodeValue = computed(() => props.content?.initialNodeValue || 'Nodo Inicial');
-
-    const defaultFlowData = {
-      nodes: [
+    const initialNodeValue = computed(() => props.content?.initialNodeValue || {
+      "nodes": [
         {
-          id: 'entrada-1',
-          type: 'custom',
-          position: { x: 300, y: 50 },
-          data: {
-            label: 'Entrada',
-            content: initialNodeValue.value,
-            number: '1',
-            subTitle: 'Sin herramienta'
-          }
-        },
-        {
-          id: 'proceso-1',
-          type: 'custom',
-          position: { x: 300, y: 200 },
-          data: {
-            label: 'Proceso',
-            content: 'Procesamiento de información',
-            number: '2',
-            subTitle: 'Sin herramienta'
-          }
-        },
-        {
-          id: 'salida-1',
-          type: 'custom',
-          position: { x: 300, y: 350 },
-          data: {
-            label: 'Salida',
-            content: 'Información de salida',
-            number: '3',
-            subTitle: 'Sin herramienta'
+          "type": "custom",
+          "dimensions": {
+            "width": 280,
+            "height": 96
+          },
+          "handleBounds": {
+            "source": [
+              {
+                "id": "right",
+                "position": "right",
+                "x": 278,
+                "y": 45,
+                "width": 6,
+                "height": 6
+              },
+              {
+                "id": "bottom",
+                "position": "bottom",
+                "x": 137,
+                "y": 94,
+                "width": 6,
+                "height": 6
+              }
+            ],
+            "target": [
+              {
+                "id": "top",
+                "position": "top",
+                "x": 137,
+                "y": -4,
+                "width": 6,
+                "height": 6
+              },
+              {
+                "id": "left",
+                "position": "left",
+                "x": -4,
+                "y": 45,
+                "width": 6,
+                "height": 6
+              }
+            ]
+          },
+          "computedPosition": {
+            "x": -125.17520353434588,
+            "y": -66.91720503768197,
+            "z": 0
+          },
+          "selected": false,
+          "dragging": false,
+          "resizing": false,
+          "initialized": true,
+          "data": {
+            "label": "Entrada",
+            "content": "Información de entrada",
+            "number": "1",
+            "backgroundColor": "#E3F2FD",
+            "toolName": "Sin herramienta"
+          },
+          "events": {},
+          "id": "input",
+          "position": {
+            "x": -125.17520353434588,
+            "y": -66.91720503768197
+          },
+          "size": {
+            "width": 280,
+            "height": 100
+          },
+          "handles": {
+            "source": [
+              "bottom"
+            ],
+            "target": [
+              "top"
+            ]
           }
         }
       ],
-      edges: [
-        {
-          id: 'edge-1',
-          source: 'entrada-1',
-          target: 'proceso-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { 
-            strokeWidth: 2,
-            stroke: '#3B82F6'
-          },
-          markerEnd: {
-            type: 'arrowclosed',
-            width: 20,
-            height: 20,
-            color: '#3B82F6',
-          }
-        },
-        {
-          id: 'edge-2',
-          source: 'proceso-1',
-          target: 'salida-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { 
-            strokeWidth: 2,
-            stroke: '#3B82F6'
-          },
-          markerEnd: {
-            type: 'arrowclosed',
-            width: 20,
-            height: 20,
-            color: '#3B82F6',
-          }
-        }
-      ]
-    };
+      "edges": []
+    });
+
+    const defaultFlowData = initialNodeValue;
 
     const updateFlowData = () => {
       const nodes = elements.value.filter(el => !el.source);
@@ -291,8 +302,8 @@ export default {
           ];
         } else {
           elements.value = [
-            ...defaultFlowData.nodes,
-            ...defaultFlowData.edges
+            ...defaultFlowData.value.nodes,
+            ...defaultFlowData.value.edges
           ];
         }
         initialized.value = true;
@@ -324,7 +335,7 @@ export default {
         position,
         data: {
           ...data.data,
-          content: data.data?.content || initialNodeValue.value,
+          content: data.data?.content || 'Nuevo Nodo',
         }
       };
 
