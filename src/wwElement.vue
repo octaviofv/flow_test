@@ -272,7 +272,21 @@ export default {
 
     // Update flowData when nodes or edges change
     watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
-      if (!initialized.value || !nodes || !edges) return;
+      console.log('🔍 WATCHER DISPARADO:', {
+        initialized: initialized.value,
+        nodesCount: nodes?.length || 0,
+        edgesCount: edges?.length || 0,
+        timestamp: new Date().toLocaleTimeString()
+      });
+
+      if (!initialized.value || !nodes || !edges) {
+        console.log('❌ WATCHER CANCELADO - Condiciones no cumplidas:', {
+          initialized: initialized.value,
+          hasNodes: !!nodes,
+          hasEdges: !!edges
+        });
+        return;
+      }
       
       const flowData = {
         nodes,
@@ -281,7 +295,22 @@ export default {
 
       const stringifiedData = JSON.stringify(flowData);
       
+      console.log('📊 DATOS ACTUALES DEL FLOW:', {
+        nodes: nodes.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
+        edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target })),
+        flowDataSize: stringifiedData.length + ' caracteres'
+      });
+
+      console.log('🔄 COMPARANDO CON FLOWDATA ANTERIOR:', {
+        tieneFlowDataAnterior: !!props.content.flowData,
+        sonIguales: stringifiedData === props.content.flowData,
+        flowDataAnteriorSize: props.content.flowData?.length || 0 + ' caracteres'
+      });
+      
       if (stringifiedData !== props.content.flowData) {
+        console.log('✅ DETECTADO CAMBIO - Actualizando flowData');
+        console.log('📝 NUEVO FLOWDATA:', JSON.stringify(flowData, null, 2));
+        
         const updatedContent = {
           ...props.content,
           flowData: stringifiedData
@@ -292,36 +321,75 @@ export default {
           name: 'flowSaved', 
           event: JSON.stringify(flowData)
         });
+        
+        console.log('🚀 EVENTOS EMITIDOS:', {
+          'update:content': 'Contenido actualizado',
+          'trigger-event': 'flowSaved con nueva data'
+        });
+      } else {
+        console.log('⚪ SIN CAMBIOS - No se actualiza flowData');
       }
+      
+      console.log('─'.repeat(80)); // Separador visual
     }, { deep: true });
 
     onMounted(() => {
+      console.log('🚀 INICIANDO COMPONENTE FLOWCHART');
+      console.log('📋 PROPS RECIBIDOS:', {
+        tieneFlowData: !!props.content?.flowData,
+        flowDataType: typeof props.content?.flowData,
+        flowDataSize: props.content?.flowData?.length || 0,
+        tieneInitialNodeValue: !!props.content?.initialNodeValue
+      });
+
       try {
         if (props.content?.flowData) {
+          console.log('✅ USANDO FLOWDATA EXISTENTE');
+          console.log('📦 FLOWDATA RAW:', props.content.flowData);
+          
           const parsedData = typeof props.content.flowData === 'string' 
             ? JSON.parse(props.content.flowData) 
             : props.content.flowData;
+          
+          console.log('🔄 FLOWDATA PARSEADO:', {
+            nodes: parsedData.nodes?.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
+            edges: parsedData.edges?.map(e => ({ id: e.id, source: e.source, target: e.target }))
+          });
           
           elements.value = [
             ...parsedData.nodes,
             ...parsedData.edges
           ];
         } else {
+          console.log('🆕 USANDO INITIAL NODE VALUE (Primera vez)');
+          console.log('📦 INITIAL NODE VALUE:', defaultFlowData.value);
+          
           elements.value = [
             ...defaultFlowData.value.nodes,
             ...defaultFlowData.value.edges
           ];
         }
+        
         initialized.value = true;
+        console.log('✅ COMPONENTE INICIALIZADO CORRECTAMENTE');
+        console.log('📊 ELEMENTOS FINALES:', {
+          totalElements: elements.value.length,
+          nodes: elements.value.filter(el => el.id && !el.source).length,
+          edges: elements.value.filter(el => el.source).length
+        });
         
         setTimeout(() => {
           fitView({ padding: 0.2 });
+          console.log('🎯 VISTA AJUSTADA AL CONTENIDO');
         }, 100);
       } catch (error) {
-        console.error('Error initializing flow data:', error);
+        console.error('❌ ERROR AL INICIALIZAR:', error);
+        console.log('🔧 INICIALIZANDO CON ELEMENTOS VACÍOS');
         elements.value = [];
         initialized.value = true;
       }
+      
+      console.log('═'.repeat(80)); // Separador visual
     });
 
     const generateId = () => `node_${Date.now()}`;
