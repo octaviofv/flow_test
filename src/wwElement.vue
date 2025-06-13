@@ -107,13 +107,13 @@ export default {
       animated: true,
       style: { 
         strokeWidth: 2,
-        stroke: '#3B82F6'
+        stroke: '#373E58'
       },
       markerEnd: {
         type: 'arrowclosed',
         width: 20,
         height: 20,
-        color: '#3B82F6',
+        color: '#373E58',
       },
     };
 
