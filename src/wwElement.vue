@@ -4,7 +4,6 @@
       <Sidebar class="flowchart-sidebar" />
       <VueFlow
         v-if="initialized"
-        v-model="elements"
         :default-zoom="defaultZoom"
         :min-zoom="minZoom"
         :max-zoom="maxZoom"
@@ -130,7 +129,6 @@ export default {
   emits: ['trigger-event', 'update:content'],
   setup(props, { emit }) {
     const initialized = ref(false);
-    const elements = ref([]);
     const selectedNode = ref(null);
 
     const isEditing = computed(() => {
@@ -168,6 +166,9 @@ export default {
       getViewport,
       getNodes,
       getEdges,
+      setNodes,
+      setEdges,
+      updateNode
     } = useVueFlow({
       defaultEdgeOptions,
     });
@@ -270,13 +271,34 @@ export default {
 
     const defaultFlowData = initialNodeValue;
 
+    // Watch for changes in content.flowData
+    watch(() => props.content.flowData, (newFlowData) => {
+      if (!newFlowData || !initialized.value) return;
+      
+      try {
+        const parsedData = typeof newFlowData === 'string' 
+          ? JSON.parse(newFlowData) 
+          : newFlowData;
+
+        if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
+          setNodes(parsedData.nodes);
+        }
+        
+        if (parsedData.edges && Array.isArray(parsedData.edges)) {
+          setEdges(parsedData.edges);
+        }
+      } catch (error) {
+        console.error('Error parsing flow data:', error);
+      }
+    }, { deep: true });
+
     // Update flowData when nodes or edges change
-    watch(() => [getNodes(), getEdges()], ([nodes, edges]) => {
+    watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
       if (!initialized.value || !nodes || !edges) return;
       
       const flowData = {
-        nodes: nodes.value || [],
-        edges: edges.value || []
+        nodes,
+        edges
       };
 
       const stringifiedData = JSON.stringify(flowData);
@@ -293,31 +315,7 @@ export default {
           event: JSON.stringify(flowData)
         });
       }
-    }, { deep: true, flush: 'post' });
-
-    // Additional watcher for elements array changes
-    watch(elements, (newElements) => {
-      if (!initialized.value || !newElements?.length) return;
-      
-      const nodes = newElements.filter(el => !el.source && !el.target);
-      const edges = newElements.filter(el => el.source && el.target);
-      
-      const flowData = { nodes, edges };
-      const stringifiedData = JSON.stringify(flowData);
-      
-      if (stringifiedData !== props.content.flowData) {
-        const updatedContent = {
-          ...props.content,
-          flowData: stringifiedData
-        };
-        emit('update:content', updatedContent);
-        // Emit flowSaved event with the updated flow data
-        emit('trigger-event', { 
-          name: 'flowSaved', 
-          event: JSON.stringify(flowData)
-        });
-      }
-    }, { deep: true, flush: 'post' });
+    }, { deep: true });
 
     onMounted(() => {
       try {
@@ -326,16 +324,18 @@ export default {
             ? JSON.parse(props.content.flowData) 
             : props.content.flowData;
           
-          elements.value = [
-            ...parsedData.nodes,
-            ...parsedData.edges
-          ];
+          if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
+            setNodes(parsedData.nodes);
+          }
+          
+          if (parsedData.edges && Array.isArray(parsedData.edges)) {
+            setEdges(parsedData.edges);
+          }
         } else {
-          elements.value = [
-            ...defaultFlowData.value.nodes,
-            ...defaultFlowData.value.edges
-          ];
+          setNodes(defaultFlowData.value.nodes);
+          setEdges(defaultFlowData.value.edges);
         }
+        
         initialized.value = true;
         
         setTimeout(() => {
@@ -343,7 +343,8 @@ export default {
         }, 100);
       } catch (error) {
         console.error('Error initializing flow data:', error);
-        elements.value = [];
+        setNodes(defaultFlowData.value.nodes);
+        setEdges(defaultFlowData.value.edges);
         initialized.value = true;
       }
     });
@@ -419,8 +420,10 @@ export default {
     const onNodeDataUpdate = (nodeId, newData) => {
       const node = findNode(nodeId);
       if (node) {
-        node.data = { ...node.data, ...newData };
-        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
+        updateNode(nodeId, {
+          data: { ...node.data, ...newData }
+        });
+        emit('trigger-event', { name: 'nodeUpdated', event: { node: findNode(nodeId) } });
       }
     };
 
@@ -435,8 +438,10 @@ export default {
     const updateNodeData = (nodeId, data) => {
       const node = findNode(nodeId);
       if (node) {
-        node.data = { ...node.data, ...data };
-        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
+        updateNode(nodeId, {
+          data: { ...node.data, ...data }
+        });
+        emit('trigger-event', { name: 'nodeUpdated', event: { node: findNode(nodeId) } });
       }
     };
 
@@ -453,7 +458,6 @@ export default {
     };
 
     return {
-      elements,
       initialized,
       isEditing,
       containerStyle,
