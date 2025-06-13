@@ -142,7 +142,7 @@ export default {
 
 <style lang="scss" scoped>
 .custom-node {
-  min-width: 280px;
+  min-width: 300px;
   background: white;
   border-radius: 12px;
   border: 1px solid #E5E7EB;
