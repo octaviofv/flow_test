@@ -271,10 +271,12 @@ export default {
     const defaultFlowData = initialNodeValue;
 
     // Update flowData when nodes or edges change
-    watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
+    watch(() => [getNodes(), getEdges()], ([nodes, edges]) => {
+      if (!initialized.value || !nodes || !edges) return;
+      
       const flowData = {
-        nodes,
-        edges
+        nodes: nodes.value || [],
+        edges: edges.value || []
       };
 
       const stringifiedData = JSON.stringify(flowData);
@@ -291,7 +293,31 @@ export default {
           event: { flowData }
         });
       }
-    }, { deep: true });
+    }, { deep: true, flush: 'post' });
+
+    // Additional watcher for elements array changes
+    watch(elements, (newElements) => {
+      if (!initialized.value || !newElements?.length) return;
+      
+      const nodes = newElements.filter(el => !el.source && !el.target);
+      const edges = newElements.filter(el => el.source && el.target);
+      
+      const flowData = { nodes, edges };
+      const stringifiedData = JSON.stringify(flowData);
+      
+      if (stringifiedData !== props.content.flowData) {
+        const updatedContent = {
+          ...props.content,
+          flowData: stringifiedData
+        };
+        emit('update:content', updatedContent);
+        // Emit flowSaved event with the updated flow data
+        emit('trigger-event', { 
+          name: 'flowSaved', 
+          event: { flowData }
+        });
+      }
+    }, { deep: true, flush: 'post' });
 
     onMounted(() => {
       try {
