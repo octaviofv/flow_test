@@ -772,6 +772,9 @@ export default {
           timestamp: new Date().toLocaleTimeString()
         });
         
+        console.log('📤 FLOW DATA STRING:', flowData);
+        console.log('📤 FLOW DATA OBJECT:', flowDataObject);
+        
         emit('trigger-event', { 
           name: 'flowSaved', 
           event: { 
