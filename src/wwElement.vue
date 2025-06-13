@@ -37,25 +37,24 @@
         <template #node-conditional="nodeProps">
           <ConditionalNode v-bind="nodeProps" @update:data="onNodeDataUpdate" />
         </template>
-
-
       </VueFlow>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, watch, onMounted } from 'vue';
-import { VueFlow, useVueFlow } from '@vue-flow/core';
-import '@vue-flow/core/dist/style.css';
-import '@vue-flow/core/dist/theme-default.css';
-import CustomNode from './components/CustomNode.vue';
-import CommentNode from './components/CommentNode.vue';
-import ConditionalNode from './components/ConditionalNode.vue';
-import Sidebar from './components/Sidebar.vue';
+// VERSIÓN 2.0.0 - LIMPIA PARA WEWEB - SOLO VUE-FLOW CORE
+import { ref, computed, watch, onMounted } from 'vue'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
+import CustomNode from './components/CustomNode.vue'
+import CommentNode from './components/CommentNode.vue'
+import ConditionalNode from './components/ConditionalNode.vue'
+import Sidebar from './components/Sidebar.vue'
 
 export default {
-  name: 'FlowChart',
+  name: 'FlowChartComponentV2',
   components: {
     VueFlow,
     CustomNode,
@@ -72,22 +71,17 @@ export default {
       type: String,
       required: true,
     },
-    /* wwEditor:start */
     wwEditorState: { type: Object, required: true },
-    /* wwEditor:end */
   },
   emits: ['trigger-event', 'update:content'],
   setup(props, { emit }) {
-    const initialized = ref(false);
-    const elements = ref([]);
-    const selectedNode = ref(null);
+    const initialized = ref(false)
+    const elements = ref([])
+    const selectedNode = ref(null)
 
     const isEditing = computed(() => {
-      /* wwEditor:start */
-      return props.wwEditorState?.isEditing;
-      /* wwEditor:end */
-      return false;
-    });
+      return props.wwEditorState?.isEditing || false
+    })
 
     const defaultEdgeOptions = {
       type: 'smoothstep',
@@ -102,7 +96,7 @@ export default {
         height: 20,
         color: '#373E58',
       },
-    };
+    }
 
     const { 
       findNode, 
@@ -111,441 +105,184 @@ export default {
       removeNodes, 
       project,
       fitView,
-      zoomIn: vueFlowZoomIn,
-      zoomOut: vueFlowZoomOut,
-      zoomTo,
-      getViewport,
       getNodes,
       getEdges,
     } = useVueFlow({
       defaultEdgeOptions,
-    });
+    })
 
     const containerStyle = computed(() => ({
       height: props.content?.height || '600px',
       backgroundColor: '#fafafa',
-    }));
+    }))
 
-    const defaultZoom = computed(() => props.content?.defaultZoom || 1);
-    const minZoom = computed(() => props.content?.minZoom || 0.1);
-    const maxZoom = computed(() => props.content?.maxZoom || 4);
-    const initialNodeValue = computed(() => props.content?.initialNodeValue || {
-      "nodes": [
+    const defaultZoom = computed(() => props.content?.defaultZoom || 1)
+    const minZoom = computed(() => props.content?.minZoom || 0.1)
+    const maxZoom = computed(() => props.content?.maxZoom || 4)
+
+    const defaultFlowData = {
+      nodes: [
         {
-          "type": "custom",
-          "dimensions": {
-            "width": 280,
-            "height": 96
-          },
-          "handleBounds": {
-            "source": [
-              {
-                "id": "right",
-                "position": "right",
-                "x": 278,
-                "y": 45,
-                "width": 6,
-                "height": 6
-              },
-              {
-                "id": "bottom",
-                "position": "bottom",
-                "x": 137,
-                "y": 94,
-                "width": 6,
-                "height": 6
-              }
-            ],
-            "target": [
-              {
-                "id": "top",
-                "position": "top",
-                "x": 137,
-                "y": -4,
-                "width": 6,
-                "height": 6
-              },
-              {
-                "id": "left",
-                "position": "left",
-                "x": -4,
-                "y": 45,
-                "width": 6,
-                "height": 6
-              }
-            ]
-          },
-          "computedPosition": {
-            "x": -125.17520353434588,
-            "y": -66.91720503768197,
-            "z": 0
-          },
-          "selected": false,
-          "dragging": false,
-          "resizing": false,
-          "initialized": true,
-          "data": {
-            "label": "Entrada",
-            "content": "Información de entrada",
-            "number": "1",
-            "backgroundColor": "#E3F2FD",
-            "toolName": "Sin herramienta"
-          },
-          "events": {},
-          "id": "input",
-          "position": {
-            "x": -125.17520353434588,
-            "y": -66.91720503768197
-          },
-          "size": {
-            "width": 280,
-            "height": 100
-          },
-          "handles": {
-            "source": [
-              "bottom"
-            ],
-            "target": [
-              "top"
-            ]
+          id: 'input',
+          type: 'custom',
+          position: { x: 250, y: 50 },
+          data: {
+            label: 'Entrada',
+            content: 'Información de entrada',
+            number: '1',
+            backgroundColor: '#E3F2FD',
+            toolName: 'Sin herramienta'
           }
         }
       ],
-      "edges": []
-    });
+      edges: []
+    }
 
-    const defaultFlowData = initialNodeValue;
+    const isInitializing = ref(true)
+    const userHasModified = ref(false)
 
-    // Bandera para evitar que el watcher se ejecute durante la inicialización
-    const isInitializing = ref(true);
-    
-    // Bandera para saber si el usuario ha hecho modificaciones
-    const userHasModified = ref(false);
-
-    // Update flowData when nodes or edges change
+    // Watch para actualizar flowData cuando cambien nodos o edges
     watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
-      console.log('🔍 WATCHER DISPARADO:', {
-        initialized: initialized.value,
-        isInitializing: isInitializing.value,
-        nodesCount: nodes?.length || 0,
-        edgesCount: edges?.length || 0,
-        timestamp: new Date().toLocaleTimeString(),
-        trigger: 'CAMBIO EN NODES/EDGES DETECTADO'
-      });
-
-      // No actualizar durante la inicialización o si no está inicializado
       if (!initialized.value || isInitializing.value || !nodes || !edges) {
-        console.log('❌ WATCHER CANCELADO - Condiciones no cumplidas:', {
-          initialized: initialized.value,
-          isInitializing: isInitializing.value,
-          hasNodes: !!nodes,
-          hasEdges: !!edges
-        });
-        return;
+        return
       }
 
-      // Marcar que el usuario ha hecho modificaciones (después de la inicialización)
       if (!userHasModified.value) {
-        console.log('👤 PRIMERA MODIFICACIÓN DEL USUARIO DETECTADA');
-        userHasModified.value = true;
+        userHasModified.value = true
       }
       
-      const flowData = {
-        nodes,
-        edges
-      };
-
-      const stringifiedData = JSON.stringify(flowData);
-      
-      console.log('📊 DATOS ACTUALES DEL FLOW:', {
-        nodes: nodes.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
-        edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target })),
-        flowDataSize: stringifiedData.length + ' caracteres',
-        userHasModified: userHasModified.value,
-        estadoActual: userHasModified.value ? 'USUARIO HA MODIFICADO' : 'DATOS ORIGINALES'
-      });
-
-      // 📋 MOSTRAR TODO EL FLOWDATA COMPLETO EN TEXTO
-      console.log('📋 FLOWDATA COMPLETO (TEXTO):', stringifiedData);
-      console.log('📋 FLOWDATA COMPLETO (OBJETO):', JSON.stringify(flowData, null, 2));
-      
-      // 🔍 DESGLOSE DETALLADO DE CADA NODO
-      console.log('🔍 DESGLOSE DE NODOS:');
-      nodes.forEach((node, index) => {
-        console.log(`   Nodo ${index + 1}:`, {
-          id: node.id,
-          type: node.type,
-          position: node.position,
-          data: node.data,
-          size: node.size,
-          style: node.style
-        });
-      });
-
-      // 🔗 DESGLOSE DETALLADO DE CADA EDGE
-      if (edges.length > 0) {
-        console.log('🔗 DESGLOSE DE EDGES:');
-        edges.forEach((edge, index) => {
-          console.log(`   Edge ${index + 1}:`, {
-            id: edge.id,
-            source: edge.source,
-            target: edge.target,
-            type: edge.type,
-            style: edge.style
-          });
-        });
-      } else {
-        console.log('🔗 NO HAY EDGES ACTUALMENTE');
-      }
-
-      console.log('🔄 COMPARANDO CON FLOWDATA ANTERIOR:', {
-        tieneFlowDataAnterior: !!props.content.flowData,
-        sonIguales: stringifiedData === props.content.flowData,
-        flowDataAnteriorSize: props.content.flowData?.length || 0 + ' caracteres'
-      });
+      const flowData = { nodes, edges }
+      const stringifiedData = JSON.stringify(flowData)
       
       if (stringifiedData !== props.content.flowData) {
-        console.log('✅ DETECTADO CAMBIO - Actualizando flowData');
-        console.log('📝 NUEVO FLOWDATA:', JSON.stringify(flowData, null, 2));
-        
         const updatedContent = {
           ...props.content,
           flowData: stringifiedData
-        };
-        emit('update:content', updatedContent);
+        }
+        emit('update:content', updatedContent)
         
-        // Emit flowSaved event with the updated flow data usando la función helper
-        setTimeout(() => emitFlowSaved('watcherDetected'), 10);
-        
-        console.log('🚀 EVENTOS EMITIDOS:', {
-          'update:content': 'Contenido actualizado',
-          'trigger-event': 'flowSaved con nueva data'
-        });
-      } else {
-        console.log('⚪ SIN CAMBIOS - No se actualiza flowData');
-      }
-      
-      console.log('─'.repeat(80)); // Separador visual
-    }, { deep: true });
-
-    // Watcher específico para initialNodeValue - se actualiza cuando cambia desde WeWeb
-    watch(() => props.content?.initialNodeValue, (newInitialNodeValue) => {
-      console.log('🔄 CAMBIO EN INITIAL NODE VALUE DETECTADO:', {
-        hasNewValue: !!newInitialNodeValue,
-        hasNodes: !!(newInitialNodeValue?.nodes),
-        nodesCount: newInitialNodeValue?.nodes?.length || 0,
-        edgesCount: newInitialNodeValue?.edges?.length || 0,
-        timestamp: new Date().toLocaleTimeString()
-      });
-
-      if (!initialized.value) {
-        console.log('⏳ COMPONENTE NO INICIALIZADO - Cambio será aplicado en onMounted');
-        return;
-      }
-
-      if (newInitialNodeValue && newInitialNodeValue.nodes && newInitialNodeValue.nodes.length > 0) {
-        console.log('🔄 ACTUALIZANDO ELEMENTOS CON NUEVO INITIAL NODE VALUE');
-        console.log('📦 NUEVOS DATOS:', {
-          nodes: newInitialNodeValue.nodes.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
-          edges: (newInitialNodeValue.edges || []).map(e => ({ id: e.id, source: e.source, target: e.target }))
-        });
-
-        // Temporalmente deshabilitar el watcher principal
-        isInitializing.value = true;
-
-        // Actualizar elementos
-        elements.value = [
-          ...(newInitialNodeValue.nodes || []),
-          ...(newInitialNodeValue.edges || [])
-        ];
-
-        // Ajustar vista al nuevo contenido
         setTimeout(() => {
-          if (elements.value.length > 0) {
-            fitView({ padding: 0.2 });
-            console.log('🎯 VISTA AJUSTADA AL NUEVO CONTENIDO');
-          }
-          
-          // Re-habilitar el watcher principal después de un momento
-          setTimeout(() => {
-            isInitializing.value = false;
-            console.log('🔓 ACTUALIZACIÓN DE INITIAL NODE VALUE COMPLETA');
-          }, 100);
-        }, 150);
+          emit('trigger-event', { 
+            name: 'flowSaved', 
+            event: { 
+              flowData: stringifiedData,
+              flowDataObject: flowData,
+              timestamp: new Date().toISOString()
+            }
+          })
+        }, 10)
       }
-    }, { deep: true });
+    }, { deep: true })
 
     onMounted(() => {
-      console.log('🚀 INICIANDO COMPONENTE FLOWCHART');
-      console.log('📋 PROPS RECIBIDOS:', {
-        tieneFlowData: !!props.content?.flowData,
-        flowDataType: typeof props.content?.flowData,
-        flowDataSize: props.content?.flowData?.length || 0,
-        tieneInitialNodeValue: !!props.content?.initialNodeValue
-      });
-
       try {
-        let dataToLoad = null;
+        let dataToLoad = null
 
-        // Lógica híbrida: initialNodeValue vs flowData con modificaciones del usuario
         const hasInitialNodeValue = props.content?.initialNodeValue && 
                                    props.content.initialNodeValue.nodes && 
-                                   props.content.initialNodeValue.nodes.length > 0;
-        
+                                   props.content.initialNodeValue.nodes.length > 0
+
         const hasFlowData = props.content?.flowData && 
-                           props.content.flowData !== '{"nodes":[],"edges":[]}';
+                           props.content.flowData !== '{"nodes":[],"edges":[]}'
 
         if (hasFlowData && hasInitialNodeValue) {
-          // Caso especial: tenemos ambos - decidir cuál usar
-          console.log('🤔 TENEMOS AMBOS: initialNodeValue Y flowData');
-          
-          // Si flowData tiene más elementos que initialNodeValue, probablemente el usuario modificó
           const parsedFlowData = typeof props.content.flowData === 'string' 
             ? JSON.parse(props.content.flowData) 
-            : props.content.flowData;
+            : props.content.flowData
           
-          const flowDataNodeCount = parsedFlowData.nodes?.length || 0;
-          const initialNodeCount = props.content.initialNodeValue.nodes?.length || 0;
+          const flowDataNodeCount = parsedFlowData.nodes?.length || 0
+          const initialNodeCount = props.content.initialNodeValue.nodes?.length || 0
           
           if (flowDataNodeCount > initialNodeCount) {
-            console.log('👤 USANDO FLOWDATA (Usuario ha agregado nodos)');
-            console.log(`📊 FlowData: ${flowDataNodeCount} nodos vs Initial: ${initialNodeCount} nodos`);
-            dataToLoad = parsedFlowData;
-            userHasModified.value = true;
+            dataToLoad = parsedFlowData
+            userHasModified.value = true
           } else {
-            console.log('🎯 USANDO INITIAL NODE VALUE (Sin modificaciones significativas)');
-            dataToLoad = props.content.initialNodeValue;
-            userHasModified.value = false;
+            dataToLoad = props.content.initialNodeValue
+            userHasModified.value = false
           }
-          
         } else if (hasInitialNodeValue) {
-          console.log('🎯 USANDO INITIAL NODE VALUE (ÚNICA OPCIÓN)');
-          console.log('📦 INITIAL NODE VALUE:', props.content.initialNodeValue);
-          dataToLoad = props.content.initialNodeValue;
-          userHasModified.value = false;
-          
+          dataToLoad = props.content.initialNodeValue
+          userHasModified.value = false
         } else if (hasFlowData) {
-          console.log('✅ USANDO FLOWDATA EXISTENTE (SIN INITIAL NODE VALUE)');
-          console.log('📦 FLOWDATA RAW:', props.content.flowData);
           dataToLoad = typeof props.content.flowData === 'string' 
             ? JSON.parse(props.content.flowData) 
-            : props.content.flowData;
-          userHasModified.value = true;
-          
+            : props.content.flowData
+          userHasModified.value = true
         } else {
-          console.log('🔧 USANDO DEFAULT FLOW DATA (ÚLTIMO RECURSO)');
-          console.log('📦 DEFAULT FLOW DATA:', defaultFlowData.value);
-          dataToLoad = defaultFlowData.value;
-          userHasModified.value = false;
+          dataToLoad = defaultFlowData
+          userHasModified.value = false
         }
 
-        // Validar que dataToLoad tenga la estructura correcta
         if (!dataToLoad || !dataToLoad.nodes || !Array.isArray(dataToLoad.nodes)) {
-          console.warn('⚠️ DATOS INVÁLIDOS - Usando fallback vacío');
-          dataToLoad = { nodes: [], edges: [] };
+          dataToLoad = { nodes: [], edges: [] }
         }
 
-        console.log('🔄 DATOS A CARGAR:', {
-          nodes: dataToLoad.nodes?.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
-          edges: dataToLoad.edges?.map(e => ({ id: e.id, source: e.source, target: e.target }))
-        });
-        
-        // Cargar elementos de forma segura
         elements.value = [
           ...(dataToLoad.nodes || []),
           ...(dataToLoad.edges || [])
-        ];
+        ]
         
-        console.log('✅ COMPONENTE INICIALIZADO CORRECTAMENTE');
-        console.log('📊 ELEMENTOS FINALES:', {
-          totalElements: elements.value.length,
-          nodes: elements.value.filter(el => el.id && !el.source).length,
-          edges: elements.value.filter(el => el.source).length
-        });
+        initialized.value = true
         
-        // Marcar como inicializado ANTES del fitView
-        initialized.value = true;
-        
-        // Ajustar vista después de la inicialización
         setTimeout(() => {
           if (elements.value.length > 0) {
-            fitView({ padding: 0.2 });
-            console.log('🎯 VISTA AJUSTADA AL CONTENIDO');
+            fitView({ padding: 0.2 })
           }
           
-          // Permitir que el watcher funcione después de la inicialización completa
           setTimeout(() => {
-            isInitializing.value = false;
-            console.log('🔓 INICIALIZACIÓN COMPLETA - Watcher habilitado');
-          }, 100);
-        }, 150);
+            isInitializing.value = false
+          }, 100)
+        }, 150)
         
       } catch (error) {
-        console.error('❌ ERROR AL INICIALIZAR:', error);
-        console.error('📋 ERROR DETAILS:', {
-          message: error.message,
-          stack: error.stack,
-          flowData: props.content?.flowData,
-          initialNodeValue: props.content?.initialNodeValue
-        });
+        console.error('Error inicializando flowchart:', error)
+        elements.value = []
+        initialized.value = true
         
-        // Inicialización de emergencia
-        console.log('🔧 INICIALIZANDO CON ELEMENTOS VACÍOS (EMERGENCY)');
-        elements.value = [];
-        initialized.value = true;
-        
-        // Habilitar watcher después del error
         setTimeout(() => {
-          isInitializing.value = false;
-          console.log('🔓 INICIALIZACIÓN DE EMERGENCIA COMPLETA - Watcher habilitado');
-        }, 200);
+          isInitializing.value = false
+        }, 200)
       }
-      
-      console.log('═'.repeat(80)); // Separador visual
-    });
+    })
 
-    const generateId = () => `node_${Date.now()}`;
+    const generateId = () => `node_${Date.now()}`
 
     const onDragOver = (event) => {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'move';
-    };
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+    }
 
-    // Función para calcular el siguiente número automáticamente
     const getNextNodeNumber = (nodeType) => {
-      if (nodeType !== 'custom') return null;
+      if (nodeType !== 'custom') return null
       
-      const currentNodes = getNodes.value || [];
-      const customNodes = currentNodes.filter(node => node.type === 'custom');
+      const currentNodes = getNodes.value || []
+      const customNodes = currentNodes.filter(node => node.type === 'custom')
       
-      if (customNodes.length === 0) return '1';
+      if (customNodes.length === 0) return '1'
       
-      // Obtener todos los números existentes
       const existingNumbers = customNodes
         .map(node => {
-          const number = node.data?.number;
+          const number = node.data?.number
           if (typeof number === 'string' && number !== 'N' && !isNaN(parseInt(number))) {
-            return parseInt(number);
+            return parseInt(number)
           }
-          return 0;
+          return 0
         })
-        .filter(num => num > 0);
+        .filter(num => num > 0)
       
-      if (existingNumbers.length === 0) return '1';
+      if (existingNumbers.length === 0) return '1'
       
-      // Retornar el siguiente número después del mayor
-      const maxNumber = Math.max(...existingNumbers);
-      return String(maxNumber + 1);
-    };
+      const maxNumber = Math.max(...existingNumbers)
+      return String(maxNumber + 1)
+    }
 
     const onDrop = (event) => {
-      const data = JSON.parse(event.dataTransfer.getData('application/vueflow'));
-      const position = project({ x: event.clientX, y: event.clientY });
+      const data = JSON.parse(event.dataTransfer.getData('application/vueflow'))
+      const position = project({ x: event.clientX, y: event.clientY })
 
-      // Calcular el número automáticamente para nodos custom
-      let nodeNumber = null;
+      let nodeNumber = null
       if (data.type === 'custom') {
-        nodeNumber = getNextNodeNumber(data.type);
+        nodeNumber = getNextNodeNumber(data.type)
       }
 
       const newNode = {
@@ -555,408 +292,110 @@ export default {
         data: {
           ...data.data,
           content: data.data?.content || 'Nuevo Nodo',
-          // Asignar número automáticamente si es un nodo custom
           ...(nodeNumber && { number: nodeNumber })
         }
-      };
+      }
 
-      addNodes([newNode]);
-      emit('trigger-event', { name: 'nodeAdded', event: { node: newNode } });
-      
-      // Emitir flowSaved después de añadir nodo
-      setTimeout(() => emitFlowSaved('nodeAdded'), 50);
-    };
+      addNodes([newNode])
+      emit('trigger-event', { name: 'nodeAdded', event: { node: newNode } })
+    }
 
     const onNodeClick = (event, node) => {
-      console.log('🖱️ NODE CLICK:', {
-        nodeId: node?.id,
-        nodeType: node?.type,
-        nodeData: node?.data
-      });
-      
-      selectedNode.value = node;
-      emit('trigger-event', { name: 'nodeSelected', event: { node } });
-    };
+      selectedNode.value = node
+      emit('trigger-event', { name: 'nodeSelected', event: { node } })
+    }
 
     const onConnect = (connection) => {
-      console.log('🔗 CONNECTION CREATED:', {
-        source: connection?.source,
-        target: connection?.target,
-        connection: connection
-      });
-
       if (connection?.source && connection?.target) {
         const newEdge = {
           id: `edge-${connection.source}-${connection.target}`,
           ...connection,
           type: 'smoothstep',
           animated: true,
-        };
+        }
         
-        addEdges([newEdge]);
-        emit('trigger-event', { name: 'connectionCreated', event: { connection: newEdge } });
-        console.log('✅ Edge agregado correctamente:', newEdge.id);
-        
-        // Emitir flowSaved después de crear conexión
-        setTimeout(() => emitFlowSaved('connectionCreated'), 50);
-      } else {
-        console.warn('⚠️ Conexión inválida - source o target faltante');
+        addEdges([newEdge])
+        emit('trigger-event', { name: 'connectionCreated', event: { connection: newEdge } })
       }
-    };
+    }
 
     const onPaneClick = () => {
-      selectedNode.value = null;
-      emit('trigger-event', { name: 'selectionCleared' });
-    };
+      selectedNode.value = null
+      emit('trigger-event', { name: 'selectionCleared' })
+    }
 
     const onNodeDragStop = (...args) => {
-      console.log('🔄 NODE DRAG STOP - Argumentos recibidos:', {
-        args: args,
-        argsLength: args.length,
-        timestamp: new Date().toLocaleTimeString()
-      });
-
-      // Vamos a inspeccionar el primer argumento en detalle
-      if (args[0]) {
-        console.log('🔍 PRIMER ARGUMENTO DETALLADO:', args[0]);
-        console.log('🔍 KEYS DEL PRIMER ARGUMENTO:', Object.keys(args[0]));
-        console.log('🔍 TIPO DEL PRIMER ARGUMENTO:', typeof args[0]);
+      let node = null
+      
+      if (args.length >= 1 && args[0]) {
+        const firstArg = args[0]
         
-        // Vamos a buscar si hay información del nodo en diferentes propiedades
-        const firstArg = args[0];
-        console.log('🔍 PROPIEDADES CANDIDATAS:', {
-          node: firstArg.node,
-          nodes: firstArg.nodes,
-          target: firstArg.target,
-          detail: firstArg.detail,
-          data: firstArg.data,
-          id: firstArg.id,
-          type: firstArg.type
-        });
+        if (firstArg.id && firstArg.type) {
+          node = firstArg
+        } else if (firstArg.node && firstArg.node.id) {
+          node = firstArg.node
+        } else if (firstArg.nodes && Array.isArray(firstArg.nodes) && firstArg.nodes.length > 0) {
+          node = firstArg.nodes[0]
+        } else if (args[1] && args[1].id) {
+          node = args[1]
+        }
       }
 
-             // En VueFlow, nodeDragStop puede pasar los parámetros de diferentes maneras
-       // Vamos a detectar el formato correcto
-       let node = null;
-       let event = null;
-
-       if (args.length >= 1 && args[0]) {
-         const firstArg = args[0];
-         
-         // Caso 1: El primer argumento es el nodo directamente
-         if (firstArg.id && firstArg.type) {
-           node = firstArg;
-           console.log('✅ CASO 1: Primer argumento es el nodo');
-         }
-         // Caso 2: El nodo está en la propiedad 'node'
-         else if (firstArg.node && firstArg.node.id) {
-           node = firstArg.node;
-           console.log('✅ CASO 2: Nodo en propiedad .node');
-         }
-         // Caso 3: El nodo está en la propiedad 'nodes' (array)
-         else if (firstArg.nodes && Array.isArray(firstArg.nodes) && firstArg.nodes.length > 0) {
-           node = firstArg.nodes[0];
-           console.log('✅ CASO 3: Nodo en array .nodes');
-         }
-         // Caso 4: El nodo está en la propiedad 'target'
-         else if (firstArg.target && firstArg.target.id) {
-           node = firstArg.target;
-           console.log('✅ CASO 4: Nodo en propiedad .target');
-         }
-         // Caso 5: Es un evento de drag con información del nodo en 'detail'
-         else if (firstArg.detail && firstArg.detail.id) {
-           node = firstArg.detail;
-           console.log('✅ CASO 5: Nodo en propiedad .detail');
-         }
-         // Caso 6: El segundo argumento es el nodo
-         else if (args[1] && args[1].id) {
-           node = args[1];
-           event = firstArg;
-           console.log('✅ CASO 6: Nodo es el segundo argumento');
-         }
-       }
-
-      console.log('🔍 Nodo detectado:', {
-        node: node,
-        nodeId: node?.id,
-        nodeType: node?.type,
-        nodePosition: node?.position
-      });
-
-      // Validaciones de seguridad
-      if (!node) {
-        console.error('❌ ERROR: No se pudo detectar el nodo en onNodeDragStop');
-        console.error('📋 Todos los argumentos:', args);
-        return;
-      }
-
-      if (!node.id) {
-        console.error('❌ ERROR: node.id es undefined en onNodeDragStop', node);
-        return;
+      if (!node || !node.id) {
+        return
       }
 
       try {
-        const updatedNode = findNode(node.id);
-        console.log('🔍 Buscando nodo actualizado:', {
-          nodeId: node.id,
-          encontrado: !!updatedNode,
-          updatedNodeData: updatedNode ? {
-            id: updatedNode.id,
-            position: updatedNode.position,
-            type: updatedNode.type
-          } : null
-        });
-
+        const updatedNode = findNode(node.id)
         if (updatedNode) {
-          emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
-          console.log('✅ Evento nodeMoved emitido correctamente');
-          
-          // Emitir flowSaved después de mover nodo
-          setTimeout(() => emitFlowSaved('nodeMoved'), 50);
-          
-          // 📋 MOSTRAR FLOWDATA COMPLETO DESPUÉS DEL MOVIMIENTO
-          try {
-            console.log('🔧 Accediendo a nodes y edges como objetos reactivos...');
-            
-            // getNodes y getEdges son objetos reactivos, no funciones
-            const nodesValue = getNodes.value;
-            const edgesValue = getEdges.value;
-            
-            console.log('🔧 nodesValue:', nodesValue);
-            console.log('🔧 edgesValue:', edgesValue);
-            console.log('🔧 Cantidad de nodos:', nodesValue?.length);
-            console.log('🔧 Cantidad de edges:', edgesValue?.length);
-            
-            const currentFlowData = {
-              nodes: nodesValue || [],
-              edges: edgesValue || []
-            };
-            const currentFlowDataText = JSON.stringify(currentFlowData);
-            
-            console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (TEXTO):', currentFlowDataText);
-            console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (OBJETO):', JSON.stringify(currentFlowData, null, 2));
-            
-            // 🔍 POSICIÓN ACTUALIZADA DEL NODO MOVIDO
-            console.log('🎯 NODO MOVIDO - POSICIÓN ACTUALIZADA:', {
-              id: updatedNode.id,
-              nuevaPosicion: updatedNode.position,
-              tipo: updatedNode.type,
-              data: updatedNode.data
-            });
-          } catch (flowDataError) {
-            console.error('❌ ERROR obteniendo flowData:', flowDataError);
-            console.log('🔧 Usando solo información del nodo actualizado');
-            console.log('🎯 NODO MOVIDO - POSICIÓN ACTUALIZADA:', {
-              id: updatedNode.id,
-              nuevaPosicion: updatedNode.position,
-              tipo: updatedNode.type,
-              data: updatedNode.data
-            });
-          }
-        } else {
-          console.warn('⚠️ No se encontró el nodo actualizado con id:', node.id);
+          emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } })
         }
       } catch (error) {
-        console.error('❌ ERROR en onNodeDragStop:', error);
+        console.error('Error en onNodeDragStop:', error)
       }
-    };
+    }
 
     const onNodesDelete = (nodes) => {
       nodes.forEach(node => {
-        emit('trigger-event', { name: 'nodeDeleted', event: { nodeId: node.id } });
-      });
-      
-      // Emitir flowSaved después de eliminar nodos
-      setTimeout(() => emitFlowSaved('nodesDeleted'), 50);
-    };
+        emit('trigger-event', { name: 'nodeDeleted', event: { nodeId: node.id } })
+      })
+    }
 
     const onEdgesDelete = (edges) => {
       edges.forEach(edge => {
-        emit('trigger-event', { name: 'edgeDeleted', event: { edgeId: edge.id } });
-      });
-      
-      // Emitir flowSaved después de eliminar edges
-      setTimeout(() => emitFlowSaved('edgesDeleted'), 50);
-    };
+        emit('trigger-event', { name: 'edgeDeleted', event: { edgeId: edge.id } })
+      })
+    }
 
     const onNodeDataUpdate = (nodeId, newData) => {
-      console.log('📝 NODE DATA UPDATE:', {
-        nodeId: nodeId,
-        newData: newData,
-        timestamp: new Date().toLocaleTimeString()
-      });
-
-      const node = findNode(nodeId);
+      const node = findNode(nodeId)
       if (node) {
-        node.data = { ...node.data, ...newData };
-        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
-        console.log('✅ Nodo actualizado correctamente:', node.id);
-        
-        // Emitir flowSaved después de actualizar nodo
-        setTimeout(() => emitFlowSaved('nodeDataUpdated'), 50);
-      } else {
-        console.warn('⚠️ No se encontró el nodo para actualizar:', nodeId);
+        node.data = { ...node.data, ...newData }
+        emit('trigger-event', { name: 'nodeUpdated', event: { node } })
       }
-    };
-
-    const deleteSelected = () => {
-      if (selectedNode.value) {
-        removeNodes([selectedNode.value.id]);
-        selectedNode.value = null;
-        emit('trigger-event', { name: 'nodeDeleted' });
-        
-        // Emitir flowSaved después de eliminar nodo seleccionado
-        setTimeout(() => emitFlowSaved('selectedNodeDeleted'), 50);
-      }
-    };
-
-    const updateNodeData = (nodeId, data) => {
-      const node = findNode(nodeId);
-      if (node) {
-        node.data = { ...node.data, ...data };
-        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
-        
-        // Emitir flowSaved después de actualizar nodo
-        setTimeout(() => emitFlowSaved('nodeUpdated'), 50);
-      }
-    };
-
-
-
-    // Función para obtener el flowData actual como texto
-    const getCurrentFlowDataAsText = () => {
-      try {
-        const currentNodes = getNodes.value || [];
-        const currentEdges = getEdges.value || [];
-        const currentFlowData = {
-          nodes: currentNodes,
-          edges: currentEdges
-        };
-        const flowDataText = JSON.stringify(currentFlowData);
-        
-        console.log('📤 SOLICITADO FLOWDATA COMO TEXTO:', {
-          text: flowDataText,
-          size: flowDataText.length + ' caracteres',
-          nodesCount: currentNodes.length,
-          edgesCount: currentEdges.length,
-          timestamp: new Date().toLocaleTimeString()
-        });
-        
-        return flowDataText;
-      } catch (error) {
-        console.error('❌ ERROR obteniendo flowData como texto:', error);
-        return '{"nodes":[],"edges":[]}';
-      }
-    };
-
-    // Función para obtener el flowData actual como objeto
-    const getCurrentFlowDataAsObject = () => {
-      try {
-        const currentNodes = getNodes.value || [];
-        const currentEdges = getEdges.value || [];
-        return {
-          nodes: currentNodes,
-          edges: currentEdges
-        };
-      } catch (error) {
-        console.error('❌ ERROR obteniendo flowData como objeto:', error);
-        return { nodes: [], edges: [] };
-      }
-    };
-
-    // Función helper para emitir el evento flowSaved
-    const emitFlowSaved = (actionType = 'unknown') => {
-      try {
-        const flowDataObject = getCurrentFlowDataAsObject();
-        const flowData = JSON.stringify(flowDataObject);
-        
-        console.log(`💾 EMITIENDO FLOWSAVED - ${actionType}:`, {
-          actionType,
-          flowDataSize: flowData.length + ' caracteres',
-          nodesCount: flowDataObject.nodes?.length || 0,
-          edgesCount: flowDataObject.edges?.length || 0,
-          timestamp: new Date().toLocaleTimeString()
-        });
-        
-        console.log('📤 FLOW DATA STRING:', flowData);
-        console.log('📤 FLOW DATA OBJECT:', flowDataObject);
-        
-        emit('trigger-event', { 
-          name: 'flowSaved', 
-          event: { 
-            flowData: flowData,
-            flowDataObject: flowDataObject,
-            actionType: actionType,
-            timestamp: new Date().toISOString()
-          }
-        });
-      } catch (error) {
-        console.error('❌ ERROR emitiendo flowSaved:', error);
-      }
-    };
-
-    // Función para resetear al initialNodeValue original
-    const resetToInitialNodeValue = () => {
-      if (props.content?.initialNodeValue && 
-          props.content.initialNodeValue.nodes && 
-          props.content.initialNodeValue.nodes.length > 0) {
-        
-        console.log('🔄 RESETEANDO A INITIAL NODE VALUE');
-        
-        // Temporalmente deshabilitar el watcher
-        isInitializing.value = true;
-        userHasModified.value = false;
-
-        // Cargar datos originales
-        elements.value = [
-          ...(props.content.initialNodeValue.nodes || []),
-          ...(props.content.initialNodeValue.edges || [])
-        ];
-
-        // Ajustar vista
-        setTimeout(() => {
-          if (elements.value.length > 0) {
-            fitView({ padding: 0.2 });
-          }
-          
-          setTimeout(() => {
-            isInitializing.value = false;
-            console.log('✅ RESET COMPLETO - Volviendo a initialNodeValue');
-          }, 100);
-        }, 150);
-      }
-    };
+    }
 
     return {
       elements,
       initialized,
-      isInitializing,
-      userHasModified,
       isEditing,
       containerStyle,
       defaultZoom,
       minZoom,
       maxZoom,
-
-      initialNodeValue,
       defaultEdgeOptions,
       onNodeClick,
       onConnect,
       onPaneClick,
-      deleteSelected,
-      updateNodeData,
       onDragOver,
       onDrop,
       onNodeDragStop,
       onNodesDelete,
       onEdgesDelete,
       onNodeDataUpdate,
-      getCurrentFlowDataAsText,
-      getCurrentFlowDataAsObject,
-      resetToInitialNodeValue,
-    };
+    }
   },
-};
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1006,6 +445,4 @@ export default {
     stroke-width: 2;
   }
 }
-
-
 </style>
