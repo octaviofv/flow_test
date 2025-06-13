@@ -87,11 +87,11 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { 
   VueFlow, 
   useVueFlow,
-  Background, 
-  Controls, 
-  MiniMap, 
   Panel 
 } from '@vue-flow/core';
+import { Background } from '@vue-flow/background';
+import { Controls } from '@vue-flow/controls';
+import { MiniMap } from '@vue-flow/minimap';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/controls/dist/style.css';
