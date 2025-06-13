@@ -18,7 +18,15 @@
         ref="labelInput"
         placeholder="Título del proceso"
       />
-      <div class="node-type">{{ data.subTitle || 'Proceso' }}</div>
+      <div class="node-type" v-if="!isEditing">{{ data.toolName || data.subTitle || 'Proceso' }}</div>
+      <input
+        v-else
+        v-model="editedToolName"
+        class="edit-input-type"
+        @keyup.enter="saveChanges"
+        @keyup.esc="cancelEdit"
+        placeholder="Nombre de la herramienta"
+      />
     </div>
     
     <div class="node-content">
@@ -84,12 +92,14 @@ export default {
     const isEditing = ref(false);
     const editedLabel = ref('');
     const editedContent = ref('');
+    const editedToolName = ref('');
     const labelInput = ref(null);
     const contentTextarea = ref(null);
 
     const startEditing = () => {
       editedLabel.value = props.data.label || '';
       editedContent.value = props.data.content || '';
+      editedToolName.value = props.data.toolName || '';
       isEditing.value = true;
       
       setTimeout(() => {
@@ -102,6 +112,7 @@ export default {
         ...props.data,
         label: editedLabel.value,
         content: editedContent.value,
+        toolName: editedToolName.value,
       };
       
       emit('update:data', props.id, updatedData);
@@ -130,6 +141,7 @@ export default {
       isEditing,
       editedLabel,
       editedContent,
+      editedToolName,
       labelInput,
       contentTextarea,
       startEditing,
@@ -234,6 +246,22 @@ export default {
   background: white;
   margin-right: 8px;
   box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+}
+
+.edit-input-type {
+  padding: 4px 8px;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
+  font-size: 12px;
+  background: white;
+  box-sizing: border-box;
+  min-width: 100px;
 
   &:focus {
     outline: none;
