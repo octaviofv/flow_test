@@ -361,7 +361,7 @@ export default {
     }
 
     &.vue-flow__handle-connecting {
-      background: #3B82F6;
+      background: #373E58;
     }
 
     &.vue-flow__handle-valid {
