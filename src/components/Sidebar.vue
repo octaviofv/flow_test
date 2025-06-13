@@ -99,7 +99,6 @@ export default {
         nodeData.data = {
           label: 'Proceso',
           content: 'Procesamiento de información',
-          number: '1',
           backgroundColor: '#f0f0f0',
           subTitle: 'Sin herramienta'
         };

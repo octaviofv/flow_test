@@ -565,9 +565,42 @@ export default {
       event.dataTransfer.dropEffect = 'move';
     };
 
+    // Función para calcular el siguiente número automáticamente
+    const getNextNodeNumber = (nodeType) => {
+      if (nodeType !== 'custom') return null;
+      
+      const currentNodes = getNodes.value || [];
+      const customNodes = currentNodes.filter(node => node.type === 'custom');
+      
+      if (customNodes.length === 0) return '1';
+      
+      // Obtener todos los números existentes
+      const existingNumbers = customNodes
+        .map(node => {
+          const number = node.data?.number;
+          if (typeof number === 'string' && number !== 'N' && !isNaN(parseInt(number))) {
+            return parseInt(number);
+          }
+          return 0;
+        })
+        .filter(num => num > 0);
+      
+      if (existingNumbers.length === 0) return '1';
+      
+      // Retornar el siguiente número después del mayor
+      const maxNumber = Math.max(...existingNumbers);
+      return String(maxNumber + 1);
+    };
+
     const onDrop = (event) => {
       const data = JSON.parse(event.dataTransfer.getData('application/vueflow'));
       const position = project({ x: event.clientX, y: event.clientY });
+
+      // Calcular el número automáticamente para nodos custom
+      let nodeNumber = null;
+      if (data.type === 'custom') {
+        nodeNumber = getNextNodeNumber(data.type);
+      }
 
       const newNode = {
         id: generateId(),
@@ -576,6 +609,8 @@ export default {
         data: {
           ...data.data,
           content: data.data?.content || 'Nuevo Nodo',
+          // Asignar número automáticamente si es un nodo custom
+          ...(nodeNumber && { number: nodeNumber })
         }
       };
 
