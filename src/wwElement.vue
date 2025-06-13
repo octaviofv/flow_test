@@ -101,7 +101,7 @@ export default {
       type: 'smoothstep',
       animated: true,
       style: { 
-        strokeWidth: 2,
+        strokeWidth: 1,
         stroke: '#373E58'
       },
       markerEnd: {
