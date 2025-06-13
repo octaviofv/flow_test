@@ -761,7 +761,8 @@ export default {
       event: { 
         flowData: 'string',
         flowDataObject: 'object',
-        metadata: 'object'
+        actionType: 'string',
+        timestamp: 'string'
       },
       /* wwEditor:start */
       bindingValidation: {
@@ -773,13 +774,17 @@ export default {
           type: 'object',
           tooltip: 'The complete flow data as object with nodes and edges'
         },
-        metadata: {
-          type: 'object',
-          tooltip: 'Additional information about the flow (timestamp, counts, size)'
+        actionType: {
+          type: 'string',
+          tooltip: 'The type of action that triggered the save (nodeAdded, nodeMoved, etc.)'
+        },
+        timestamp: {
+          type: 'string',
+          tooltip: 'ISO timestamp of when the action occurred'
         }
       },
       propertyHelp: {
-        tooltip: 'Triggered when the flow diagram is saved/updated. Contains the complete flow data in multiple formats.'
+        tooltip: 'Triggered when the flow diagram is saved/updated. Contains the complete flow data and action information.'
       },
       /* wwEditor:end */
     },

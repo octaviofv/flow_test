@@ -351,11 +351,8 @@ export default {
         };
         emit('update:content', updatedContent);
         
-        // Emit flowSaved event with the updated flow data
-        emit('trigger-event', { 
-          name: 'flowSaved', 
-          event: { flowData: stringifiedData }
-        });
+        // Emit flowSaved event with the updated flow data usando la función helper
+        setTimeout(() => emitFlowSaved('watcherDetected'), 10);
         
         console.log('🚀 EVENTOS EMITIDOS:', {
           'update:content': 'Contenido actualizado',
@@ -450,6 +447,9 @@ export default {
 
       addNodes([newNode]);
       emit('trigger-event', { name: 'nodeAdded', event: { node: newNode } });
+      
+      // Emitir flowSaved después de añadir nodo
+      setTimeout(() => emitFlowSaved('nodeAdded'), 50);
     };
 
     const onNodeClick = (event, node) => {
@@ -481,6 +481,9 @@ export default {
         addEdges([newEdge]);
         emit('trigger-event', { name: 'connectionCreated', event: { connection: newEdge } });
         console.log('✅ Edge agregado correctamente:', newEdge.id);
+        
+        // Emitir flowSaved después de crear conexión
+        setTimeout(() => emitFlowSaved('connectionCreated'), 50);
       } else {
         console.warn('⚠️ Conexión inválida - source o target faltante');
       }
@@ -593,6 +596,9 @@ export default {
           emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
           console.log('✅ Evento nodeMoved emitido correctamente');
           
+          // Emitir flowSaved después de mover nodo
+          setTimeout(() => emitFlowSaved('nodeMoved'), 50);
+          
           // 📋 MOSTRAR FLOWDATA COMPLETO DESPUÉS DEL MOVIMIENTO
           try {
             console.log('🔧 Accediendo a nodes y edges como objetos reactivos...');
@@ -644,12 +650,18 @@ export default {
       nodes.forEach(node => {
         emit('trigger-event', { name: 'nodeDeleted', event: { nodeId: node.id } });
       });
+      
+      // Emitir flowSaved después de eliminar nodos
+      setTimeout(() => emitFlowSaved('nodesDeleted'), 50);
     };
 
     const onEdgesDelete = (edges) => {
       edges.forEach(edge => {
         emit('trigger-event', { name: 'edgeDeleted', event: { edgeId: edge.id } });
       });
+      
+      // Emitir flowSaved después de eliminar edges
+      setTimeout(() => emitFlowSaved('edgesDeleted'), 50);
     };
 
     const onNodeDataUpdate = (nodeId, newData) => {
@@ -664,6 +676,9 @@ export default {
         node.data = { ...node.data, ...newData };
         emit('trigger-event', { name: 'nodeUpdated', event: { node } });
         console.log('✅ Nodo actualizado correctamente:', node.id);
+        
+        // Emitir flowSaved después de actualizar nodo
+        setTimeout(() => emitFlowSaved('nodeDataUpdated'), 50);
       } else {
         console.warn('⚠️ No se encontró el nodo para actualizar:', nodeId);
       }
@@ -674,6 +689,9 @@ export default {
         removeNodes([selectedNode.value.id]);
         selectedNode.value = null;
         emit('trigger-event', { name: 'nodeDeleted' });
+        
+        // Emitir flowSaved después de eliminar nodo seleccionado
+        setTimeout(() => emitFlowSaved('selectedNodeDeleted'), 50);
       }
     };
 
@@ -682,6 +700,9 @@ export default {
       if (node) {
         node.data = { ...node.data, ...data };
         emit('trigger-event', { name: 'nodeUpdated', event: { node } });
+        
+        // Emitir flowSaved después de actualizar nodo
+        setTimeout(() => emitFlowSaved('nodeUpdated'), 50);
       }
     };
 
@@ -735,6 +756,34 @@ export default {
       } catch (error) {
         console.error('❌ ERROR obteniendo flowData como objeto:', error);
         return { nodes: [], edges: [] };
+      }
+    };
+
+    // Función helper para emitir el evento flowSaved
+    const emitFlowSaved = (actionType = 'unknown') => {
+      try {
+        const flowDataObject = getCurrentFlowDataAsObject();
+        const flowData = JSON.stringify(flowDataObject);
+        
+        console.log(`💾 EMITIENDO FLOWSAVED - ${actionType}:`, {
+          actionType,
+          flowDataSize: flowData.length + ' caracteres',
+          nodesCount: flowDataObject.nodes?.length || 0,
+          edgesCount: flowDataObject.edges?.length || 0,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        
+        emit('trigger-event', { 
+          name: 'flowSaved', 
+          event: { 
+            flowData: flowData,
+            flowDataObject: flowDataObject,
+            actionType: actionType,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        console.error('❌ ERROR emitiendo flowSaved:', error);
       }
     };
 
