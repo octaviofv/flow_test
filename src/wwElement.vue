@@ -301,6 +301,39 @@ export default {
         flowDataSize: stringifiedData.length + ' caracteres'
       });
 
+      // 📋 MOSTRAR TODO EL FLOWDATA COMPLETO EN TEXTO
+      console.log('📋 FLOWDATA COMPLETO (TEXTO):', stringifiedData);
+      console.log('📋 FLOWDATA COMPLETO (OBJETO):', JSON.stringify(flowData, null, 2));
+      
+      // 🔍 DESGLOSE DETALLADO DE CADA NODO
+      console.log('🔍 DESGLOSE DE NODOS:');
+      nodes.forEach((node, index) => {
+        console.log(`   Nodo ${index + 1}:`, {
+          id: node.id,
+          type: node.type,
+          position: node.position,
+          data: node.data,
+          size: node.size,
+          style: node.style
+        });
+      });
+
+      // 🔗 DESGLOSE DETALLADO DE CADA EDGE
+      if (edges.length > 0) {
+        console.log('🔗 DESGLOSE DE EDGES:');
+        edges.forEach((edge, index) => {
+          console.log(`   Edge ${index + 1}:`, {
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            type: edge.type,
+            style: edge.style
+          });
+        });
+      } else {
+        console.log('🔗 NO HAY EDGES ACTUALMENTE');
+      }
+
       console.log('🔄 COMPARANDO CON FLOWDATA ANTERIOR:', {
         tieneFlowDataAnterior: !!props.content.flowData,
         sonIguales: stringifiedData === props.content.flowData,
@@ -460,33 +493,68 @@ export default {
       console.log('🔄 NODE DRAG STOP - Argumentos recibidos:', {
         args: args,
         argsLength: args.length,
-        arg0: args[0],
-        arg1: args[1],
-        arg2: args[2],
         timestamp: new Date().toLocaleTimeString()
       });
 
-      // En VueFlow, nodeDragStop puede pasar los parámetros de diferentes maneras
-      // Vamos a detectar el formato correcto
-      let node = null;
-      let event = null;
-
-      if (args.length >= 1) {
-        // Caso 1: El primer argumento es el nodo
-        if (args[0] && typeof args[0] === 'object' && args[0].id) {
-          node = args[0];
-          event = args[1];
-        }
-        // Caso 2: El primer argumento es el evento, el segundo es el nodo
-        else if (args[1] && typeof args[1] === 'object' && args[1].id) {
-          event = args[0];
-          node = args[1];
-        }
-        // Caso 3: Es un array de nodos
-        else if (Array.isArray(args[0]) && args[0].length > 0) {
-          node = args[0][0]; // Tomar el primer nodo del array
-        }
+      // Vamos a inspeccionar el primer argumento en detalle
+      if (args[0]) {
+        console.log('🔍 PRIMER ARGUMENTO DETALLADO:', args[0]);
+        console.log('🔍 KEYS DEL PRIMER ARGUMENTO:', Object.keys(args[0]));
+        console.log('🔍 TIPO DEL PRIMER ARGUMENTO:', typeof args[0]);
+        
+        // Vamos a buscar si hay información del nodo en diferentes propiedades
+        const firstArg = args[0];
+        console.log('🔍 PROPIEDADES CANDIDATAS:', {
+          node: firstArg.node,
+          nodes: firstArg.nodes,
+          target: firstArg.target,
+          detail: firstArg.detail,
+          data: firstArg.data,
+          id: firstArg.id,
+          type: firstArg.type
+        });
       }
+
+             // En VueFlow, nodeDragStop puede pasar los parámetros de diferentes maneras
+       // Vamos a detectar el formato correcto
+       let node = null;
+       let event = null;
+
+       if (args.length >= 1 && args[0]) {
+         const firstArg = args[0];
+         
+         // Caso 1: El primer argumento es el nodo directamente
+         if (firstArg.id && firstArg.type) {
+           node = firstArg;
+           console.log('✅ CASO 1: Primer argumento es el nodo');
+         }
+         // Caso 2: El nodo está en la propiedad 'node'
+         else if (firstArg.node && firstArg.node.id) {
+           node = firstArg.node;
+           console.log('✅ CASO 2: Nodo en propiedad .node');
+         }
+         // Caso 3: El nodo está en la propiedad 'nodes' (array)
+         else if (firstArg.nodes && Array.isArray(firstArg.nodes) && firstArg.nodes.length > 0) {
+           node = firstArg.nodes[0];
+           console.log('✅ CASO 3: Nodo en array .nodes');
+         }
+         // Caso 4: El nodo está en la propiedad 'target'
+         else if (firstArg.target && firstArg.target.id) {
+           node = firstArg.target;
+           console.log('✅ CASO 4: Nodo en propiedad .target');
+         }
+         // Caso 5: Es un evento de drag con información del nodo en 'detail'
+         else if (firstArg.detail && firstArg.detail.id) {
+           node = firstArg.detail;
+           console.log('✅ CASO 5: Nodo en propiedad .detail');
+         }
+         // Caso 6: El segundo argumento es el nodo
+         else if (args[1] && args[1].id) {
+           node = args[1];
+           event = firstArg;
+           console.log('✅ CASO 6: Nodo es el segundo argumento');
+         }
+       }
 
       console.log('🔍 Nodo detectado:', {
         node: node,
