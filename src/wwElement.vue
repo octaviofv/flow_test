@@ -949,12 +949,12 @@ export default {
   :deep(.vue-flow__handle) {
     width: 8px;
     height: 8px;
-    background: #2196F3;
+    background: #373E58;
     border: 2px solid white;
   }
 
   :deep(.vue-flow__edge-path) {
-    stroke: #2196F3;
+    stroke: #373E58;
     stroke-width: 2;
   }
 }
