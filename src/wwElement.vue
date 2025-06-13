@@ -456,19 +456,49 @@ export default {
       emit('trigger-event', { name: 'selectionCleared' });
     };
 
-    const onNodeDragStop = (event, node) => {
-      console.log('🔄 NODE DRAG STOP - Evento disparado:', {
-        event: event,
+    const onNodeDragStop = (...args) => {
+      console.log('🔄 NODE DRAG STOP - Argumentos recibidos:', {
+        args: args,
+        argsLength: args.length,
+        arg0: args[0],
+        arg1: args[1],
+        arg2: args[2],
+        timestamp: new Date().toLocaleTimeString()
+      });
+
+      // En VueFlow, nodeDragStop puede pasar los parámetros de diferentes maneras
+      // Vamos a detectar el formato correcto
+      let node = null;
+      let event = null;
+
+      if (args.length >= 1) {
+        // Caso 1: El primer argumento es el nodo
+        if (args[0] && typeof args[0] === 'object' && args[0].id) {
+          node = args[0];
+          event = args[1];
+        }
+        // Caso 2: El primer argumento es el evento, el segundo es el nodo
+        else if (args[1] && typeof args[1] === 'object' && args[1].id) {
+          event = args[0];
+          node = args[1];
+        }
+        // Caso 3: Es un array de nodos
+        else if (Array.isArray(args[0]) && args[0].length > 0) {
+          node = args[0][0]; // Tomar el primer nodo del array
+        }
+      }
+
+      console.log('🔍 Nodo detectado:', {
         node: node,
         nodeId: node?.id,
         nodeType: node?.type,
-        nodePosition: node?.position,
-        timestamp: new Date().toLocaleTimeString()
+        nodePosition: node?.position
       });
 
       // Validaciones de seguridad
       if (!node) {
-        console.error('❌ ERROR: node es undefined en onNodeDragStop');
+        console.error('❌ ERROR: No se pudo detectar el nodo en onNodeDragStop');
+        console.error('📋 Todos los argumentos:', args);
         return;
       }
 
