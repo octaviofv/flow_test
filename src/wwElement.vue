@@ -594,25 +594,20 @@ export default {
           
           // 📋 MOSTRAR FLOWDATA COMPLETO DESPUÉS DEL MOVIMIENTO
           try {
-            console.log('🔧 Intentando obtener nodes y edges...');
-            console.log('🔧 getNodes:', typeof getNodes);
-            console.log('🔧 getEdges:', typeof getEdges);
+            console.log('🔧 Accediendo a nodes y edges como objetos reactivos...');
             
-            const currentNodes = getNodes();
-            const currentEdges = getEdges();
-            
-            console.log('🔧 currentNodes (before .value):', currentNodes);
-            console.log('🔧 currentEdges (before .value):', currentEdges);
-            
-            const nodesValue = currentNodes?.value || currentNodes;
-            const edgesValue = currentEdges?.value || currentEdges;
+            // getNodes y getEdges son objetos reactivos, no funciones
+            const nodesValue = getNodes.value;
+            const edgesValue = getEdges.value;
             
             console.log('🔧 nodesValue:', nodesValue);
             console.log('🔧 edgesValue:', edgesValue);
+            console.log('🔧 Cantidad de nodos:', nodesValue?.length);
+            console.log('🔧 Cantidad de edges:', edgesValue?.length);
             
             const currentFlowData = {
-              nodes: nodesValue,
-              edges: edgesValue
+              nodes: nodesValue || [],
+              edges: edgesValue || []
             };
             const currentFlowDataText = JSON.stringify(currentFlowData);
             
