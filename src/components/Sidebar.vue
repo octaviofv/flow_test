@@ -1,7 +1,30 @@
 <template>
-  <div class="sidebar">
-    <h3 class="sidebar-title">Elementos</h3>
-    <div class="node-list">
+  <div class="sidebar" :class="{ 'collapsed': isCollapsed }">
+    <div class="sidebar-header">
+      <h3 class="sidebar-title" v-show="!isCollapsed">Elementos</h3>
+      <button 
+        class="collapse-btn" 
+        @click="toggleCollapse"
+        :title="isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'"
+      >
+        <svg 
+          v-if="!isCollapsed" 
+          viewBox="0 0 24 24" 
+          class="collapse-icon"
+        >
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        <svg 
+          v-else 
+          viewBox="0 0 24 24" 
+          class="collapse-icon"
+        >
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="node-list" v-show="!isCollapsed">
       <div
         class="draggable-node"
         draggable="true"
@@ -55,9 +78,17 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+
 export default {
   name: 'Sidebar',
   setup() {
+    const isCollapsed = ref(false);
+
+    const toggleCollapse = () => {
+      isCollapsed.value = !isCollapsed.value;
+    };
+
     const onDragStart = (event, nodeType, variant) => {
       let nodeData = {
         type: nodeType,
@@ -90,6 +121,8 @@ export default {
     };
 
     return {
+      isCollapsed,
+      toggleCollapse,
       onDragStart
     };
   }
@@ -105,13 +138,60 @@ export default {
   height: 100%;
   overflow-y: auto;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease, padding 0.3s ease;
+  
+  &.collapsed {
+    width: 60px;
+    padding: 20px 8px;
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
 .sidebar-title {
   font-size: 18px;
   font-weight: 600;
   color: #333333;
-  margin-bottom: 20px;
+  margin: 0;
+  transition: opacity 0.2s ease;
+}
+
+.collapse-btn {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.collapse-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #6c757d;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .node-list {

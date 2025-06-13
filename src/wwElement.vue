@@ -166,6 +166,8 @@ export default {
       zoomOut: vueFlowZoomOut,
       zoomTo,
       getViewport,
+      getNodes,
+      getEdges,
     } = useVueFlow({
       defaultEdgeOptions,
     });
@@ -268,25 +270,27 @@ export default {
 
     const defaultFlowData = initialNodeValue;
 
-    const updateFlowData = () => {
-      const nodes = elements.value.filter(el => !el.source);
-      const edges = elements.value.filter(el => el.source);
-
+    // Update flowData when nodes or edges change
+    watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
       const flowData = {
         nodes,
         edges
       };
 
-      const updatedContent = {
-        ...props.content,
-        flowData: JSON.stringify(flowData, null, 2)
-      };
-
-      emit('update:content', updatedContent);
-    };
-
-    watch(elements, () => {
-      updateFlowData();
+      const stringifiedData = JSON.stringify(flowData);
+      
+      if (stringifiedData !== props.content.flowData) {
+        const updatedContent = {
+          ...props.content,
+          flowData: stringifiedData
+        };
+        emit('update:content', updatedContent);
+        // Emit flowSaved event with the updated flow data
+        emit('trigger-event', { 
+          name: 'flowSaved', 
+          event: { flowData }
+        });
+      }
     }, { deep: true });
 
     onMounted(() => {
