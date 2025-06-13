@@ -270,23 +270,38 @@ export default {
 
     const defaultFlowData = initialNodeValue;
 
+    // Bandera para evitar que el watcher se ejecute durante la inicialización
+    const isInitializing = ref(true);
+    
+    // Bandera para saber si el usuario ha hecho modificaciones
+    const userHasModified = ref(false);
+
     // Update flowData when nodes or edges change
     watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
       console.log('🔍 WATCHER DISPARADO:', {
         initialized: initialized.value,
+        isInitializing: isInitializing.value,
         nodesCount: nodes?.length || 0,
         edgesCount: edges?.length || 0,
         timestamp: new Date().toLocaleTimeString(),
         trigger: 'CAMBIO EN NODES/EDGES DETECTADO'
       });
 
-      if (!initialized.value || !nodes || !edges) {
+      // No actualizar durante la inicialización o si no está inicializado
+      if (!initialized.value || isInitializing.value || !nodes || !edges) {
         console.log('❌ WATCHER CANCELADO - Condiciones no cumplidas:', {
           initialized: initialized.value,
+          isInitializing: isInitializing.value,
           hasNodes: !!nodes,
           hasEdges: !!edges
         });
         return;
+      }
+
+      // Marcar que el usuario ha hecho modificaciones (después de la inicialización)
+      if (!userHasModified.value) {
+        console.log('👤 PRIMERA MODIFICACIÓN DEL USUARIO DETECTADA');
+        userHasModified.value = true;
       }
       
       const flowData = {
@@ -299,7 +314,9 @@ export default {
       console.log('📊 DATOS ACTUALES DEL FLOW:', {
         nodes: nodes.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
         edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target })),
-        flowDataSize: stringifiedData.length + ' caracteres'
+        flowDataSize: stringifiedData.length + ' caracteres',
+        userHasModified: userHasModified.value,
+        estadoActual: userHasModified.value ? 'USUARIO HA MODIFICADO' : 'DATOS ORIGINALES'
       });
 
       // 📋 MOSTRAR TODO EL FLOWDATA COMPLETO EN TEXTO
@@ -365,6 +382,53 @@ export default {
       console.log('─'.repeat(80)); // Separador visual
     }, { deep: true });
 
+    // Watcher específico para initialNodeValue - se actualiza cuando cambia desde WeWeb
+    watch(() => props.content?.initialNodeValue, (newInitialNodeValue) => {
+      console.log('🔄 CAMBIO EN INITIAL NODE VALUE DETECTADO:', {
+        hasNewValue: !!newInitialNodeValue,
+        hasNodes: !!(newInitialNodeValue?.nodes),
+        nodesCount: newInitialNodeValue?.nodes?.length || 0,
+        edgesCount: newInitialNodeValue?.edges?.length || 0,
+        timestamp: new Date().toLocaleTimeString()
+      });
+
+      if (!initialized.value) {
+        console.log('⏳ COMPONENTE NO INICIALIZADO - Cambio será aplicado en onMounted');
+        return;
+      }
+
+      if (newInitialNodeValue && newInitialNodeValue.nodes && newInitialNodeValue.nodes.length > 0) {
+        console.log('🔄 ACTUALIZANDO ELEMENTOS CON NUEVO INITIAL NODE VALUE');
+        console.log('📦 NUEVOS DATOS:', {
+          nodes: newInitialNodeValue.nodes.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
+          edges: (newInitialNodeValue.edges || []).map(e => ({ id: e.id, source: e.source, target: e.target }))
+        });
+
+        // Temporalmente deshabilitar el watcher principal
+        isInitializing.value = true;
+
+        // Actualizar elementos
+        elements.value = [
+          ...(newInitialNodeValue.nodes || []),
+          ...(newInitialNodeValue.edges || [])
+        ];
+
+        // Ajustar vista al nuevo contenido
+        setTimeout(() => {
+          if (elements.value.length > 0) {
+            fitView({ padding: 0.2 });
+            console.log('🎯 VISTA AJUSTADA AL NUEVO CONTENIDO');
+          }
+          
+          // Re-habilitar el watcher principal después de un momento
+          setTimeout(() => {
+            isInitializing.value = false;
+            console.log('🔓 ACTUALIZACIÓN DE INITIAL NODE VALUE COMPLETA');
+          }, 100);
+        }, 150);
+      }
+    }, { deep: true });
+
     onMounted(() => {
       console.log('🚀 INICIANDO COMPONENTE FLOWCHART');
       console.log('📋 PROPS RECIBIDOS:', {
@@ -375,34 +439,77 @@ export default {
       });
 
       try {
-        if (props.content?.flowData) {
-          console.log('✅ USANDO FLOWDATA EXISTENTE');
-          console.log('📦 FLOWDATA RAW:', props.content.flowData);
+        let dataToLoad = null;
+
+        // Lógica híbrida: initialNodeValue vs flowData con modificaciones del usuario
+        const hasInitialNodeValue = props.content?.initialNodeValue && 
+                                   props.content.initialNodeValue.nodes && 
+                                   props.content.initialNodeValue.nodes.length > 0;
+        
+        const hasFlowData = props.content?.flowData && 
+                           props.content.flowData !== '{"nodes":[],"edges":[]}';
+
+        if (hasFlowData && hasInitialNodeValue) {
+          // Caso especial: tenemos ambos - decidir cuál usar
+          console.log('🤔 TENEMOS AMBOS: initialNodeValue Y flowData');
           
-          const parsedData = typeof props.content.flowData === 'string' 
+          // Si flowData tiene más elementos que initialNodeValue, probablemente el usuario modificó
+          const parsedFlowData = typeof props.content.flowData === 'string' 
             ? JSON.parse(props.content.flowData) 
             : props.content.flowData;
           
-          console.log('🔄 FLOWDATA PARSEADO:', {
-            nodes: parsedData.nodes?.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
-            edges: parsedData.edges?.map(e => ({ id: e.id, source: e.source, target: e.target }))
-          });
+          const flowDataNodeCount = parsedFlowData.nodes?.length || 0;
+          const initialNodeCount = props.content.initialNodeValue.nodes?.length || 0;
           
-          elements.value = [
-            ...parsedData.nodes,
-            ...parsedData.edges
-          ];
+          if (flowDataNodeCount > initialNodeCount) {
+            console.log('👤 USANDO FLOWDATA (Usuario ha agregado nodos)');
+            console.log(`📊 FlowData: ${flowDataNodeCount} nodos vs Initial: ${initialNodeCount} nodos`);
+            dataToLoad = parsedFlowData;
+            userHasModified.value = true;
+          } else {
+            console.log('🎯 USANDO INITIAL NODE VALUE (Sin modificaciones significativas)');
+            dataToLoad = props.content.initialNodeValue;
+            userHasModified.value = false;
+          }
+          
+        } else if (hasInitialNodeValue) {
+          console.log('🎯 USANDO INITIAL NODE VALUE (ÚNICA OPCIÓN)');
+          console.log('📦 INITIAL NODE VALUE:', props.content.initialNodeValue);
+          dataToLoad = props.content.initialNodeValue;
+          userHasModified.value = false;
+          
+        } else if (hasFlowData) {
+          console.log('✅ USANDO FLOWDATA EXISTENTE (SIN INITIAL NODE VALUE)');
+          console.log('📦 FLOWDATA RAW:', props.content.flowData);
+          dataToLoad = typeof props.content.flowData === 'string' 
+            ? JSON.parse(props.content.flowData) 
+            : props.content.flowData;
+          userHasModified.value = true;
+          
         } else {
-          console.log('🆕 USANDO INITIAL NODE VALUE (Primera vez)');
-          console.log('📦 INITIAL NODE VALUE:', defaultFlowData.value);
-          
-          elements.value = [
-            ...defaultFlowData.value.nodes,
-            ...defaultFlowData.value.edges
-          ];
+          console.log('🔧 USANDO DEFAULT FLOW DATA (ÚLTIMO RECURSO)');
+          console.log('📦 DEFAULT FLOW DATA:', defaultFlowData.value);
+          dataToLoad = defaultFlowData.value;
+          userHasModified.value = false;
         }
+
+        // Validar que dataToLoad tenga la estructura correcta
+        if (!dataToLoad || !dataToLoad.nodes || !Array.isArray(dataToLoad.nodes)) {
+          console.warn('⚠️ DATOS INVÁLIDOS - Usando fallback vacío');
+          dataToLoad = { nodes: [], edges: [] };
+        }
+
+        console.log('🔄 DATOS A CARGAR:', {
+          nodes: dataToLoad.nodes?.map(n => ({ id: n.id, type: n.type, label: n.data?.label })),
+          edges: dataToLoad.edges?.map(e => ({ id: e.id, source: e.source, target: e.target }))
+        });
         
-        initialized.value = true;
+        // Cargar elementos de forma segura
+        elements.value = [
+          ...(dataToLoad.nodes || []),
+          ...(dataToLoad.edges || [])
+        ];
+        
         console.log('✅ COMPONENTE INICIALIZADO CORRECTAMENTE');
         console.log('📊 ELEMENTOS FINALES:', {
           totalElements: elements.value.length,
@@ -410,16 +517,44 @@ export default {
           edges: elements.value.filter(el => el.source).length
         });
         
+        // Marcar como inicializado ANTES del fitView
+        initialized.value = true;
+        
+        // Ajustar vista después de la inicialización
         setTimeout(() => {
-          fitView({ padding: 0.2 });
-          console.log('🎯 VISTA AJUSTADA AL CONTENIDO');
-        }, 100);
+          if (elements.value.length > 0) {
+            fitView({ padding: 0.2 });
+            console.log('🎯 VISTA AJUSTADA AL CONTENIDO');
+          }
+          
+          // Permitir que el watcher funcione después de la inicialización completa
+          setTimeout(() => {
+            isInitializing.value = false;
+            console.log('🔓 INICIALIZACIÓN COMPLETA - Watcher habilitado');
+          }, 100);
+        }, 150);
+        
       } catch (error) {
         console.error('❌ ERROR AL INICIALIZAR:', error);
-        console.log('🔧 INICIALIZANDO CON ELEMENTOS VACÍOS');
+        console.error('📋 ERROR DETAILS:', {
+          message: error.message,
+          stack: error.stack,
+          flowData: props.content?.flowData,
+          initialNodeValue: props.content?.initialNodeValue
+        });
+        
+        // Inicialización de emergencia
+        console.log('🔧 INICIALIZANDO CON ELEMENTOS VACÍOS (EMERGENCY)');
         elements.value = [];
         initialized.value = true;
+        
+        // Habilitar watcher después del error
+        setTimeout(() => {
+          isInitializing.value = false;
+          console.log('🔓 INICIALIZACIÓN DE EMERGENCIA COMPLETA - Watcher habilitado');
+        }, 200);
       }
+      
       console.log('═'.repeat(80)); // Separador visual
     });
 
@@ -789,9 +924,43 @@ export default {
       }
     };
 
+    // Función para resetear al initialNodeValue original
+    const resetToInitialNodeValue = () => {
+      if (props.content?.initialNodeValue && 
+          props.content.initialNodeValue.nodes && 
+          props.content.initialNodeValue.nodes.length > 0) {
+        
+        console.log('🔄 RESETEANDO A INITIAL NODE VALUE');
+        
+        // Temporalmente deshabilitar el watcher
+        isInitializing.value = true;
+        userHasModified.value = false;
+
+        // Cargar datos originales
+        elements.value = [
+          ...(props.content.initialNodeValue.nodes || []),
+          ...(props.content.initialNodeValue.edges || [])
+        ];
+
+        // Ajustar vista
+        setTimeout(() => {
+          if (elements.value.length > 0) {
+            fitView({ padding: 0.2 });
+          }
+          
+          setTimeout(() => {
+            isInitializing.value = false;
+            console.log('✅ RESET COMPLETO - Volviendo a initialNodeValue');
+          }, 100);
+        }, 150);
+      }
+    };
+
     return {
       elements,
       initialized,
+      isInitializing,
+      userHasModified,
       isEditing,
       containerStyle,
       defaultZoom,
@@ -818,6 +987,7 @@ export default {
       fitViewToContent,
       getCurrentFlowDataAsText,
       getCurrentFlowDataAsObject,
+      resetToInitialNodeValue,
     };
   },
 };
