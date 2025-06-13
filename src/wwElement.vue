@@ -4,6 +4,7 @@
       <Sidebar class="flowchart-sidebar" />
       <VueFlow
         v-if="initialized"
+        v-model="elements"
         :default-zoom="defaultZoom"
         :min-zoom="minZoom"
         :max-zoom="maxZoom"
@@ -129,6 +130,7 @@ export default {
   emits: ['trigger-event', 'update:content'],
   setup(props, { emit }) {
     const initialized = ref(false);
+    const elements = ref([]);
     const selectedNode = ref(null);
 
     const isEditing = computed(() => {
@@ -166,9 +168,6 @@ export default {
       getViewport,
       getNodes,
       getEdges,
-      setNodes,
-      setEdges,
-      updateNode
     } = useVueFlow({
       defaultEdgeOptions,
     });
@@ -271,27 +270,6 @@ export default {
 
     const defaultFlowData = initialNodeValue;
 
-    // Watch for changes in content.flowData
-    watch(() => props.content.flowData, (newFlowData) => {
-      if (!newFlowData || !initialized.value) return;
-      
-      try {
-        const parsedData = typeof newFlowData === 'string' 
-          ? JSON.parse(newFlowData) 
-          : newFlowData;
-
-        if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
-          setNodes(parsedData.nodes);
-        }
-        
-        if (parsedData.edges && Array.isArray(parsedData.edges)) {
-          setEdges(parsedData.edges);
-        }
-      } catch (error) {
-        console.error('Error parsing flow data:', error);
-      }
-    }, { deep: true });
-
     // Update flowData when nodes or edges change
     watch([() => getNodes().value, () => getEdges().value], ([nodes, edges]) => {
       if (!initialized.value || !nodes || !edges) return;
@@ -309,7 +287,7 @@ export default {
           flowData: stringifiedData
         };
         emit('update:content', updatedContent);
-        // Emit flowSaved event with the updated flow data
+        // Emit flowSaved event with the updated flow data as string
         emit('trigger-event', { 
           name: 'flowSaved', 
           event: JSON.stringify(flowData)
@@ -324,18 +302,16 @@ export default {
             ? JSON.parse(props.content.flowData) 
             : props.content.flowData;
           
-          if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
-            setNodes(parsedData.nodes);
-          }
-          
-          if (parsedData.edges && Array.isArray(parsedData.edges)) {
-            setEdges(parsedData.edges);
-          }
+          elements.value = [
+            ...parsedData.nodes,
+            ...parsedData.edges
+          ];
         } else {
-          setNodes(defaultFlowData.value.nodes);
-          setEdges(defaultFlowData.value.edges);
+          elements.value = [
+            ...defaultFlowData.value.nodes,
+            ...defaultFlowData.value.edges
+          ];
         }
-        
         initialized.value = true;
         
         setTimeout(() => {
@@ -343,8 +319,7 @@ export default {
         }, 100);
       } catch (error) {
         console.error('Error initializing flow data:', error);
-        setNodes(defaultFlowData.value.nodes);
-        setEdges(defaultFlowData.value.edges);
+        elements.value = [];
         initialized.value = true;
       }
     });
@@ -420,10 +395,8 @@ export default {
     const onNodeDataUpdate = (nodeId, newData) => {
       const node = findNode(nodeId);
       if (node) {
-        updateNode(nodeId, {
-          data: { ...node.data, ...newData }
-        });
-        emit('trigger-event', { name: 'nodeUpdated', event: { node: findNode(nodeId) } });
+        node.data = { ...node.data, ...newData };
+        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
       }
     };
 
@@ -438,10 +411,8 @@ export default {
     const updateNodeData = (nodeId, data) => {
       const node = findNode(nodeId);
       if (node) {
-        updateNode(nodeId, {
-          data: { ...node.data, ...data }
-        });
-        emit('trigger-event', { name: 'nodeUpdated', event: { node: findNode(nodeId) } });
+        node.data = { ...node.data, ...data };
+        emit('trigger-event', { name: 'nodeUpdated', event: { node } });
       }
     };
 
@@ -458,6 +429,7 @@ export default {
     };
 
     return {
+      elements,
       initialized,
       isEditing,
       containerStyle,
