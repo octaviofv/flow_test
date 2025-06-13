@@ -290,7 +290,7 @@ export default {
         // Emit flowSaved event with the updated flow data
         emit('trigger-event', { 
           name: 'flowSaved', 
-          event: { flowData }
+          event: JSON.stringify(flowData)
         });
       }
     }, { deep: true, flush: 'post' });
@@ -314,7 +314,7 @@ export default {
         // Emit flowSaved event with the updated flow data
         emit('trigger-event', { 
           name: 'flowSaved', 
-          event: { flowData }
+          event: JSON.stringify(flowData)
         });
       }
     }, { deep: true, flush: 'post' });
