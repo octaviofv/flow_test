@@ -593,24 +593,49 @@ export default {
           console.log('✅ Evento nodeMoved emitido correctamente');
           
           // 📋 MOSTRAR FLOWDATA COMPLETO DESPUÉS DEL MOVIMIENTO
-          const currentNodes = getNodes().value;
-          const currentEdges = getEdges().value;
-          const currentFlowData = {
-            nodes: currentNodes,
-            edges: currentEdges
-          };
-          const currentFlowDataText = JSON.stringify(currentFlowData);
-          
-          console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (TEXTO):', currentFlowDataText);
-          console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (OBJETO):', JSON.stringify(currentFlowData, null, 2));
-          
-          // 🔍 POSICIÓN ACTUALIZADA DEL NODO MOVIDO
-          console.log('🎯 NODO MOVIDO - POSICIÓN ACTUALIZADA:', {
-            id: updatedNode.id,
-            nuevaPosicion: updatedNode.position,
-            tipo: updatedNode.type,
-            data: updatedNode.data
-          });
+          try {
+            console.log('🔧 Intentando obtener nodes y edges...');
+            console.log('🔧 getNodes:', typeof getNodes);
+            console.log('🔧 getEdges:', typeof getEdges);
+            
+            const currentNodes = getNodes();
+            const currentEdges = getEdges();
+            
+            console.log('🔧 currentNodes (before .value):', currentNodes);
+            console.log('🔧 currentEdges (before .value):', currentEdges);
+            
+            const nodesValue = currentNodes?.value || currentNodes;
+            const edgesValue = currentEdges?.value || currentEdges;
+            
+            console.log('🔧 nodesValue:', nodesValue);
+            console.log('🔧 edgesValue:', edgesValue);
+            
+            const currentFlowData = {
+              nodes: nodesValue,
+              edges: edgesValue
+            };
+            const currentFlowDataText = JSON.stringify(currentFlowData);
+            
+            console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (TEXTO):', currentFlowDataText);
+            console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (OBJETO):', JSON.stringify(currentFlowData, null, 2));
+            
+            // 🔍 POSICIÓN ACTUALIZADA DEL NODO MOVIDO
+            console.log('🎯 NODO MOVIDO - POSICIÓN ACTUALIZADA:', {
+              id: updatedNode.id,
+              nuevaPosicion: updatedNode.position,
+              tipo: updatedNode.type,
+              data: updatedNode.data
+            });
+          } catch (flowDataError) {
+            console.error('❌ ERROR obteniendo flowData:', flowDataError);
+            console.log('🔧 Usando solo información del nodo actualizado');
+            console.log('🎯 NODO MOVIDO - POSICIÓN ACTUALIZADA:', {
+              id: updatedNode.id,
+              nuevaPosicion: updatedNode.position,
+              tipo: updatedNode.type,
+              data: updatedNode.data
+            });
+          }
         } else {
           console.warn('⚠️ No se encontró el nodo actualizado con id:', node.id);
         }
