@@ -106,8 +106,8 @@ export default {
       },
       markerEnd: {
         type: 'arrowclosed',
-        width: 20,
-        height: 20,
+        width: 30,
+        height: 30,
         color: '#373E58',
       },
     };
