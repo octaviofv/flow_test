@@ -176,12 +176,12 @@ export default {
   transition: all 0.2s ease;
 
   &.selected {
-    border-color: #3B82F6;
+    border-color: #373E58;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 
   &.editing {
-    border-color: #3B82F6;
+    border-color: #373E58;
     box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
   }
 }
@@ -350,7 +350,7 @@ export default {
     width: 12px;
     height: 12px;
     background: white;
-    border: 2px solid #3B82F6;
+    border: 2px solid #373E58;
     border-radius: 50%;
     pointer-events: all;
     transition: all 0.2s ease;
