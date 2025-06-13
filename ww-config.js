@@ -4,8 +4,8 @@ export default {
     en: 'flow-puente',
     },
     icon: 'workflow',
-    },
-    properties: {   
+  },
+  properties: {   
   backgroundColor: {
     label: { en: 'Background Color' },
     type: 'Color',
@@ -753,5 +753,12 @@ export default {
     },
     /* wwEditor:end */
     }
-  }
+  },
+  triggerEvents: [
+    {
+      name: 'flowSaved',
+      label: { en: 'On Flow Saved' },
+      event: { flowData: 'flowData'}
+    },
+  ]
 };
