@@ -418,11 +418,23 @@ export default {
     };
 
     const onNodeClick = (event, node) => {
+      console.log('🖱️ NODE CLICK:', {
+        nodeId: node?.id,
+        nodeType: node?.type,
+        nodeData: node?.data
+      });
+      
       selectedNode.value = node;
       emit('trigger-event', { name: 'nodeSelected', event: { node } });
     };
 
     const onConnect = (connection) => {
+      console.log('🔗 CONNECTION CREATED:', {
+        source: connection?.source,
+        target: connection?.target,
+        connection: connection
+      });
+
       if (connection?.source && connection?.target) {
         const newEdge = {
           id: `edge-${connection.source}-${connection.target}`,
@@ -433,6 +445,9 @@ export default {
         
         addEdges([newEdge]);
         emit('trigger-event', { name: 'connectionCreated', event: { connection: newEdge } });
+        console.log('✅ Edge agregado correctamente:', newEdge.id);
+      } else {
+        console.warn('⚠️ Conexión inválida - source o target faltante');
       }
     };
 
@@ -442,9 +457,46 @@ export default {
     };
 
     const onNodeDragStop = (event, node) => {
-      const updatedNode = findNode(node.id);
-      if (updatedNode) {
-        emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
+      console.log('🔄 NODE DRAG STOP - Evento disparado:', {
+        event: event,
+        node: node,
+        nodeId: node?.id,
+        nodeType: node?.type,
+        nodePosition: node?.position,
+        timestamp: new Date().toLocaleTimeString()
+      });
+
+      // Validaciones de seguridad
+      if (!node) {
+        console.error('❌ ERROR: node es undefined en onNodeDragStop');
+        return;
+      }
+
+      if (!node.id) {
+        console.error('❌ ERROR: node.id es undefined en onNodeDragStop', node);
+        return;
+      }
+
+      try {
+        const updatedNode = findNode(node.id);
+        console.log('🔍 Buscando nodo actualizado:', {
+          nodeId: node.id,
+          encontrado: !!updatedNode,
+          updatedNodeData: updatedNode ? {
+            id: updatedNode.id,
+            position: updatedNode.position,
+            type: updatedNode.type
+          } : null
+        });
+
+        if (updatedNode) {
+          emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
+          console.log('✅ Evento nodeMoved emitido correctamente');
+        } else {
+          console.warn('⚠️ No se encontró el nodo actualizado con id:', node.id);
+        }
+      } catch (error) {
+        console.error('❌ ERROR en onNodeDragStop:', error);
       }
     };
 
@@ -461,10 +513,19 @@ export default {
     };
 
     const onNodeDataUpdate = (nodeId, newData) => {
+      console.log('📝 NODE DATA UPDATE:', {
+        nodeId: nodeId,
+        newData: newData,
+        timestamp: new Date().toLocaleTimeString()
+      });
+
       const node = findNode(nodeId);
       if (node) {
         node.data = { ...node.data, ...newData };
         emit('trigger-event', { name: 'nodeUpdated', event: { node } });
+        console.log('✅ Nodo actualizado correctamente:', node.id);
+      } else {
+        console.warn('⚠️ No se encontró el nodo para actualizar:', nodeId);
       }
     };
 
