@@ -8,37 +8,41 @@
       <div class="node-icon">
         <div class="node-number">{{ data.number || '1' }}</div>
       </div>
-      <div class="node-title" v-if="!isEditing">{{ data.label || 'Proceso' }}</div>
-      <input
-        v-else
-        v-model="editedLabel"
-        class="edit-input-header"
-        @keyup.enter="saveChanges"
-        @keyup.esc="cancelEdit"
-        ref="labelInput"
-        placeholder="Título del proceso"
-      />
-      <div class="node-type">{{ data.subTitle || 'Proceso' }}</div>
+      <div class="header-content">
+        <div class="node-title" v-if="!isEditing">{{ data.label || 'Proceso' }}</div>
+        <input
+          v-else
+          v-model="editedLabel"
+          class="edit-input-header"
+          @keyup.enter="saveChanges"
+          @keyup.esc="cancelEdit"
+          ref="labelInput"
+          placeholder="Título del proceso"
+        />
+        <div class="node-subtitle">{{ data.subTitle || 'Sin herramienta' }}</div>
+      </div>
     </div>
     
-    <div class="node-content">
-      <div v-if="!isEditing" class="content-text" @dblclick="startEditing">
-        {{ data.content || 'Doble clic para editar descripción...' }}
+    <div class="node-body">
+      <div class="content-section">
+        <div v-if="!isEditing" class="content-text" @dblclick="startEditing">
+          {{ data.content || 'Información del proceso' }}
+        </div>
+        <textarea
+          v-else
+          v-model="editedContent"
+          class="edit-textarea"
+          @keyup.esc="cancelEdit"
+          ref="contentTextarea"
+          placeholder="Información del proceso"
+          rows="3"
+        ></textarea>
       </div>
-      <textarea
-        v-else
-        v-model="editedContent"
-        class="edit-textarea"
-        @keyup.esc="cancelEdit"
-        ref="contentTextarea"
-        placeholder="Descripción del proceso"
-        rows="3"
-      ></textarea>
-    </div>
 
-    <div v-if="isEditing" class="edit-actions">
-      <button class="save-button" @click="saveChanges">Guardar</button>
-      <button class="cancel-button" @click="cancelEdit">Cancelar</button>
+      <div v-if="isEditing" class="edit-actions">
+        <button class="save-button" @click="saveChanges">Guardar</button>
+        <button class="cancel-button" @click="cancelEdit">Cancelar</button>
+      </div>
     </div>
 
     <div class="node-handles">
@@ -142,156 +146,182 @@ export default {
 
 <style lang="scss" scoped>
 .custom-node {
-  min-width: 300px;
+  min-width: 280px;
+  max-width: 320px;
   background: white;
-  border-radius: 12px;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  border: 2px solid #E5E7EB;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 
   &.selected {
     border-color: #3B82F6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 4px 16px rgba(0, 0, 0, 0.12);
   }
 
   &.editing {
     border-color: #3B82F6;
-    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 8px 24px rgba(59, 130, 246, 0.15);
   }
 }
 
 .node-header {
   display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: #F3F4F6;
-  border-bottom: 1px solid #E5E7EB;
-  gap: 12px;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 16px;
+  position: relative;
 }
 
 .node-icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #333333;
-  border-radius: 8px;
+  background: #1F2937;
+  border-radius: 12px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.2);
 }
 
 .node-number {
   color: white;
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.header-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .node-title {
-  font-weight: 500;
+  font-weight: 600;
   color: #111827;
-  font-size: 14px;
-  flex-grow: 1;
+  font-size: 18px;
+  margin-bottom: 4px;
+  line-height: 1.3;
 }
 
-.node-type {
-  font-size: 12px;
-  color: #6B7280;
-  padding: 4px 8px;
-  background: #F9FAFB;
-  border-radius: 4px;
-  border: 1px solid #E5E7EB;
+.node-subtitle {
+  font-size: 13px;
+  color: #9CA3AF;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.node-content {
+.node-body {
+  padding: 0 20px 20px;
+}
+
+.content-section {
+  background: #F8FAFC;
+  border-radius: 12px;
   padding: 16px;
+  border: 1px solid #E2E8F0;
 }
 
 .content-text {
   font-size: 14px;
-  color: #374151;
-  line-height: 1.5;
+  color: #475569;
+  line-height: 1.6;
   white-space: pre-wrap;
   cursor: text;
-  padding: 12px;
-  background: #F9FAFB;
-  border-radius: 8px;
-  min-height: 60px;
-  transition: all 0.2s ease;
+  min-height: 40px;
+  font-weight: 500;
 
   &:hover {
-    background: #F3F4F6;
+    color: #334155;
   }
 }
 
 .edit-input-header {
-  flex-grow: 1;
-  padding: 6px 8px;
-  border: 1px solid #D1D5DB;
-  border-radius: 4px;  
-  font-size: 14px;
-  font-weight: 500;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #E2E8F0;
+  border-radius: 8px;  
+  font-size: 18px;
+  font-weight: 600;
   background: white;
-  margin-right: 8px;
+  margin-bottom: 8px;
   box-sizing: border-box;
+  color: #111827;
 
   &:focus {
     outline: none;
     border-color: #3B82F6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: #9CA3AF;
+    font-weight: 500;
   }
 }
 
 .edit-textarea {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
+  padding: 16px;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
   font-size: 14px;
   resize: vertical;
   min-height: 80px;
-  background: #F9FAFB;
+  background: white;
   box-sizing: border-box;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #475569;
 
   &:focus {
     outline: none;
     border-color: #3B82F6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: #9CA3AF;
   }
 }
 
 .edit-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   justify-content: flex-end;
-  padding: 0 16px 16px;
+  margin-top: 16px;
 
   button {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    border: none;
 
     &.save-button {
       background: #3B82F6;
       color: white;
-      border: none;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 
       &:hover {
         background: #2563EB;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
       }
     }
 
     &.cancel-button {
-      background: white;
-      color: #4B5563;
-      border: 1px solid #D1D5DB;
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
 
       &:hover {
-        background: #F3F4F6;
+        background: #E2E8F0;
+        transform: translateY(-1px);
       }
     }
   }
@@ -306,21 +336,24 @@ export default {
   pointer-events: none;
 
   :deep(.vue-flow__handle) {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     background: white;
-    border: 2px solid #3B82F6;
+    border: 3px solid #3B82F6;
     border-radius: 50%;
     pointer-events: all;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 
     &:hover {
       background: #DBEAFE;
-      transform: scale(1.2);
+      transform: scale(1.3);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     &.vue-flow__handle-connecting {
       background: #3B82F6;
+      transform: scale(1.2);
     }
 
     &.vue-flow__handle-valid {
