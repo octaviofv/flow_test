@@ -6,7 +6,7 @@
   >
     <div class="node-header">
       <div class="node-icon">
-        <div class="node-number">{{ data.number || '1' }}</div>
+        <div class="node-number">{{ data.number || 'N' }}</div>
       </div>
       <div class="node-title" v-if="!isEditing">{{ data.label || 'Proceso' }}</div>
       <input
