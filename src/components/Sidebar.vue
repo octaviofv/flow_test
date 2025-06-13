@@ -131,10 +131,10 @@ export default {
 
 <style lang="scss" scoped>
 .sidebar {
-  width: 280px;
+  width: 250px;
   background: #ffffff;
   border-right: 1px solid #e0e0e0;
-  padding: 20px;
+  padding: 10px;
   height: 100%;
   overflow-y: auto;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
