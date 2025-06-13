@@ -350,10 +350,27 @@ export default {
           flowData: stringifiedData
         };
         emit('update:content', updatedContent);
+        
         // Emit flowSaved event with the updated flow data as string
+        const flowDataAsText = JSON.stringify(flowData);
+        console.log('💾 EMITIENDO EVENTO FLOWSAVED:', {
+          eventName: 'flowSaved',
+          flowDataText: flowDataAsText,
+          flowDataSize: flowDataAsText.length + ' caracteres',
+          timestamp: new Date().toLocaleTimeString()
+        });
+        
         emit('trigger-event', { 
           name: 'flowSaved', 
-          event: JSON.stringify(flowData)
+          event: flowDataAsText,
+          flowData: flowDataAsText,  // Duplicamos para mayor claridad
+          flowDataObject: flowData,  // También enviamos el objeto
+          metadata: {
+            timestamp: new Date().toISOString(),
+            nodesCount: flowData.nodes?.length || 0,
+            edgesCount: flowData.edges?.length || 0,
+            size: flowDataAsText.length
+          }
         });
         
         console.log('🚀 EVENTOS EMITIDOS:', {
@@ -696,6 +713,47 @@ export default {
       fitView({ padding: 0.2, duration: 300 });
     };
 
+    // Función para obtener el flowData actual como texto
+    const getCurrentFlowDataAsText = () => {
+      try {
+        const currentNodes = getNodes.value || [];
+        const currentEdges = getEdges.value || [];
+        const currentFlowData = {
+          nodes: currentNodes,
+          edges: currentEdges
+        };
+        const flowDataText = JSON.stringify(currentFlowData);
+        
+        console.log('📤 SOLICITADO FLOWDATA COMO TEXTO:', {
+          text: flowDataText,
+          size: flowDataText.length + ' caracteres',
+          nodesCount: currentNodes.length,
+          edgesCount: currentEdges.length,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        
+        return flowDataText;
+      } catch (error) {
+        console.error('❌ ERROR obteniendo flowData como texto:', error);
+        return '{"nodes":[],"edges":[]}';
+      }
+    };
+
+    // Función para obtener el flowData actual como objeto
+    const getCurrentFlowDataAsObject = () => {
+      try {
+        const currentNodes = getNodes.value || [];
+        const currentEdges = getEdges.value || [];
+        return {
+          nodes: currentNodes,
+          edges: currentEdges
+        };
+      } catch (error) {
+        console.error('❌ ERROR obteniendo flowData como objeto:', error);
+        return { nodes: [], edges: [] };
+      }
+    };
+
     return {
       elements,
       initialized,
@@ -723,6 +781,8 @@ export default {
       zoomIn,
       zoomOut,
       fitViewToContent,
+      getCurrentFlowDataAsText,
+      getCurrentFlowDataAsObject,
     };
   },
 };
