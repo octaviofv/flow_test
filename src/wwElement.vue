@@ -276,7 +276,8 @@ export default {
         initialized: initialized.value,
         nodesCount: nodes?.length || 0,
         edgesCount: edges?.length || 0,
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString(),
+        trigger: 'CAMBIO EN NODES/EDGES DETECTADO'
       });
 
       if (!initialized.value || !nodes || !edges) {
@@ -590,6 +591,26 @@ export default {
         if (updatedNode) {
           emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
           console.log('✅ Evento nodeMoved emitido correctamente');
+          
+          // 📋 MOSTRAR FLOWDATA COMPLETO DESPUÉS DEL MOVIMIENTO
+          const currentNodes = getNodes().value;
+          const currentEdges = getEdges().value;
+          const currentFlowData = {
+            nodes: currentNodes,
+            edges: currentEdges
+          };
+          const currentFlowDataText = JSON.stringify(currentFlowData);
+          
+          console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (TEXTO):', currentFlowDataText);
+          console.log('📋 FLOWDATA DESPUÉS DEL MOVIMIENTO (OBJETO):', JSON.stringify(currentFlowData, null, 2));
+          
+          // 🔍 POSICIÓN ACTUALIZADA DEL NODO MOVIDO
+          console.log('🎯 NODO MOVIDO - POSICIÓN ACTUALIZADA:', {
+            id: updatedNode.id,
+            nuevaPosicion: updatedNode.position,
+            tipo: updatedNode.type,
+            data: updatedNode.data
+          });
         } else {
           console.warn('⚠️ No se encontró el nodo actualizado con id:', node.id);
         }
