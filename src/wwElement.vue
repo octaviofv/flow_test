@@ -420,7 +420,6 @@ export default {
         elements.value = [];
         initialized.value = true;
       }
-      
       console.log('═'.repeat(80)); // Separador visual
     });
 
