@@ -1,4 +1,11 @@
 export default {
+  editor: {
+    label: {
+    en: 'flow-puente',
+    },
+    icon: 'workflow',
+    },
+    properties: {   
   backgroundColor: {
     label: { en: 'Background Color' },
     type: 'Color',
@@ -87,5 +94,6 @@ export default {
       tooltip: 'Set the height of the flow chart container',
     },
     /* wwEditor:end */
+    }
   }
 };
