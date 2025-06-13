@@ -758,7 +758,166 @@ export default {
     {
       name: 'flowSaved',
       label: { en: 'On Flow Saved' },
-      event: { flowData: 'flowData'}
+      event: { 
+        flowData: 'string',
+        flowDataObject: 'object',
+        metadata: 'object'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        flowData: {
+          type: 'string',
+          tooltip: 'The complete flow data as JSON string'
+        },
+        flowDataObject: {
+          type: 'object',
+          tooltip: 'The complete flow data as object with nodes and edges'
+        },
+        metadata: {
+          type: 'object',
+          tooltip: 'Additional information about the flow (timestamp, counts, size)'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when the flow diagram is saved/updated. Contains the complete flow data in multiple formats.'
+      },
+      /* wwEditor:end */
     },
+    {
+      name: 'nodeSelected',
+      label: { en: 'On Node Selected' },
+      event: { 
+        node: 'object'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        node: {
+          type: 'object',
+          tooltip: 'The selected node with all its properties (id, type, data, position)'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a node is clicked/selected in the flow diagram.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'nodeAdded',
+      label: { en: 'On Node Added' },
+      event: { 
+        node: 'object'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        node: {
+          type: 'object',
+          tooltip: 'The newly added node with all its properties'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a new node is added to the flow diagram.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'nodeMoved',
+      label: { en: 'On Node Moved' },
+      event: { 
+        node: 'object'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        node: {
+          type: 'object',
+          tooltip: 'The moved node with updated position'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a node is dragged to a new position.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'nodeUpdated',
+      label: { en: 'On Node Updated' },
+      event: { 
+        node: 'object'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        node: {
+          type: 'object',
+          tooltip: 'The updated node with new data/properties'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a node\'s data or properties are updated.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'connectionCreated',
+      label: { en: 'On Connection Created' },
+      event: { 
+        connection: 'object'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        connection: {
+          type: 'object',
+          tooltip: 'The new connection/edge with source and target information'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a new connection is created between nodes.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'nodeDeleted',
+      label: { en: 'On Node Deleted' },
+      event: { 
+        nodeId: 'string'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        nodeId: {
+          type: 'string',
+          tooltip: 'The ID of the deleted node'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a node is deleted from the flow diagram.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'edgeDeleted',
+      label: { en: 'On Edge Deleted' },
+      event: { 
+        edgeId: 'string'
+      },
+      /* wwEditor:start */
+      bindingValidation: {
+        edgeId: {
+          type: 'string',
+          tooltip: 'The ID of the deleted edge/connection'
+        }
+      },
+      propertyHelp: {
+        tooltip: 'Triggered when a connection/edge is deleted from the flow diagram.'
+      },
+      /* wwEditor:end */
+    },
+    {
+      name: 'selectionCleared',
+      label: { en: 'On Selection Cleared' },
+      event: {},
+      /* wwEditor:start */
+      propertyHelp: {
+        tooltip: 'Triggered when the user clicks on empty space, clearing any selected nodes.'
+      },
+      /* wwEditor:end */
+    }
   ]
 };
