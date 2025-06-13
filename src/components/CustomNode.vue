@@ -108,12 +108,25 @@ export default {
     };
 
     const saveChanges = () => {
+      console.log('💾 GUARDANDO CAMBIOS - CustomNode:', {
+        nodeId: props.id,
+        originalData: props.data,
+        editedLabel: editedLabel.value,
+        editedContent: editedContent.value,
+        editedToolName: editedToolName.value
+      });
+
       const updatedData = {
         ...props.data,
         label: editedLabel.value,
         content: editedContent.value,
         toolName: editedToolName.value,
       };
+      
+      console.log('📤 EMITIENDO update:data con:', {
+        nodeId: props.id,
+        updatedData: updatedData
+      });
       
       emit('update:data', props.id, updatedData);
       isEditing.value = false;
