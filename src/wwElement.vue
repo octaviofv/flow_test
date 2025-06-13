@@ -351,26 +351,10 @@ export default {
         };
         emit('update:content', updatedContent);
         
-        // Emit flowSaved event with the updated flow data as string
-        const flowDataAsText = JSON.stringify(flowData);
-        console.log('💾 EMITIENDO EVENTO FLOWSAVED:', {
-          eventName: 'flowSaved',
-          flowDataText: flowDataAsText,
-          flowDataSize: flowDataAsText.length + ' caracteres',
-          timestamp: new Date().toLocaleTimeString()
-        });
-        
+        // Emit flowSaved event with the updated flow data
         emit('trigger-event', { 
           name: 'flowSaved', 
-          event: flowDataAsText,
-          flowData: flowDataAsText,  // Duplicamos para mayor claridad
-          flowDataObject: flowData,  // También enviamos el objeto
-          metadata: {
-            timestamp: new Date().toISOString(),
-            nodesCount: flowData.nodes?.length || 0,
-            edgesCount: flowData.edges?.length || 0,
-            size: flowDataAsText.length
-          }
+          event: { flowData: stringifiedData }
         });
         
         console.log('🚀 EVENTOS EMITIDOS:', {
