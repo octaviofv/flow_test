@@ -367,11 +367,19 @@ export default {
         hasNodes: !!(newInitialNodeValue?.nodes),
         nodesCount: newInitialNodeValue?.nodes?.length || 0,
         edgesCount: newInitialNodeValue?.edges?.length || 0,
+        userHasModified: userHasModified.value,
         timestamp: new Date().toLocaleTimeString()
       });
 
       if (!initialized.value) {
         console.log('⏳ COMPONENTE NO INICIALIZADO - Cambio será aplicado en onMounted');
+        return;
+      }
+
+      // NO aplicar initialNodeValue si el usuario ya ha hecho modificaciones
+      if (userHasModified.value) {
+        console.log('🚫 IGNORANDO CAMBIO EN INITIAL NODE VALUE - Usuario ya ha modificado el flow');
+        console.log('📝 Preservando cambios del usuario en lugar de aplicar initialNodeValue');
         return;
       }
 
@@ -603,6 +611,12 @@ export default {
         }
       };
 
+      // Marcar que el usuario ha modificado el flow al agregar un nodo
+      if (!userHasModified.value) {
+        console.log('👤 USUARIO AGREGÓ NODO - Marcando como modificado');
+        userHasModified.value = true;
+      }
+
       addNodes([newNode]);
       emit('trigger-event', { name: 'nodeAdded', event: { node: newNode } });
       
@@ -628,6 +642,12 @@ export default {
       });
 
       if (connection?.source && connection?.target) {
+        // Marcar que el usuario ha modificado el flow al crear una conexión
+        if (!userHasModified.value) {
+          console.log('👤 USUARIO CREÓ CONEXIÓN - Marcando como modificado');
+          userHasModified.value = true;
+        }
+        
         const newEdge = {
           id: `edge-${connection.source}-${connection.target}`,
           ...connection,
@@ -738,6 +758,12 @@ export default {
         });
 
         if (updatedNode) {
+          // Marcar que el usuario ha modificado el flow al mover un nodo
+          if (!userHasModified.value) {
+            console.log('👤 USUARIO MOVIÓ NODO - Marcando como modificado');
+            userHasModified.value = true;
+          }
+          
           emit('trigger-event', { name: 'nodeMoved', event: { node: updatedNode } });
           console.log('✅ Evento nodeMoved emitido correctamente');
           
@@ -788,6 +814,12 @@ export default {
     };
 
     const onNodesDelete = (nodes) => {
+      // Marcar que el usuario ha modificado el flow al eliminar nodos
+      if (!userHasModified.value) {
+        console.log('👤 USUARIO ELIMINÓ NODOS - Marcando como modificado');
+        userHasModified.value = true;
+      }
+      
       nodes.forEach(node => {
         emit('trigger-event', { name: 'nodeDeleted', event: { nodeId: node.id } });
       });
@@ -839,6 +871,12 @@ export default {
 
     const deleteSelected = () => {
       if (selectedNode.value) {
+        // Marcar que el usuario ha modificado el flow al eliminar nodo seleccionado
+        if (!userHasModified.value) {
+          console.log('👤 USUARIO ELIMINÓ NODO SELECCIONADO - Marcando como modificado');
+          userHasModified.value = true;
+        }
+        
         removeNodes([selectedNode.value.id]);
         selectedNode.value = null;
         emit('trigger-event', { name: 'nodeDeleted' });
