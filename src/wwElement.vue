@@ -250,7 +250,39 @@ export default {
         return;
       }
 
-      if (!userHasModified.value) {
+      // Verificar si hay cambios reales comparando con los datos iniciales
+      const hasRealChanges = () => {
+        if (!props.content?.initialNodeValue?.nodes) {
+          return true; // No hay datos iniciales, cualquier cambio es real
+        }
+        
+        const initialNodes = props.content.initialNodeValue.nodes;
+        if (nodes.length !== initialNodes.length) {
+          return true; // Cambio en cantidad de nodos
+        }
+        
+        // Comparar cada nodo para detectar cambios cualitativos
+        for (const currentNode of nodes) {
+          const initialNode = initialNodes.find(n => n.id === currentNode.id);
+          if (!initialNode) {
+            return true; // Nodo nuevo
+          }
+          
+          const currentData = currentNode.data || {};
+          const initialData = initialNode.data || {};
+          
+          if (currentData.label !== initialData.label ||
+              currentData.content !== initialData.content ||
+              currentData.toolName !== initialData.toolName ||
+              JSON.stringify(currentNode.position) !== JSON.stringify(initialNode.position)) {
+            return true; // Cambio cualitativo detectado
+          }
+        }
+        
+        return false; // No hay cambios significativos
+      };
+
+      if (hasRealChanges() && !userHasModified.value) {
         console.log('👤 PRIMERA MODIFICACIÓN DEL USUARIO DETECTADA');
         userHasModified.value = true;
       }
@@ -400,9 +432,39 @@ export default {
           const flowDataNodeCount = parsedFlowData.nodes?.length || 0;
           const initialNodeCount = props.content.initialNodeValue.nodes?.length || 0;
           
-          if (flowDataNodeCount > initialNodeCount) {
-            console.log('👤 USANDO FLOWDATA (Usuario ha agregado nodos)');
-            console.log(`📊 FlowData: ${flowDataNodeCount} nodos vs Initial: ${initialNodeCount} nodos`);
+          // Función para detectar cambios cualitativos en los nodos
+          const hasQualitativeChanges = () => {
+            if (flowDataNodeCount !== initialNodeCount) {
+              return true; // Cambio cuantitativo
+            }
+            
+            // Comparar nodos individualmente para detectar cambios en contenido
+            for (let i = 0; i < flowDataNodeCount; i++) {
+              const flowNode = parsedFlowData.nodes[i];
+              const initialNode = props.content.initialNodeValue.nodes.find(n => n.id === flowNode.id);
+              
+              if (!initialNode) {
+                return true; // Nodo nuevo con ID diferente
+              }
+              
+              // Comparar datos importantes del nodo
+              const flowData = flowNode.data || {};
+              const initialData = initialNode.data || {};
+              
+              if (flowData.label !== initialData.label ||
+                  flowData.content !== initialData.content ||
+                  flowData.toolName !== initialData.toolName ||
+                  JSON.stringify(flowNode.position) !== JSON.stringify(initialNode.position)) {
+                return true; // Cambio cualitativo detectado
+              }
+            }
+            
+            return false; // No hay cambios significativos
+          };
+          
+          if (hasQualitativeChanges()) {
+            console.log('👤 USANDO FLOWDATA (Usuario ha modificado nodos)');
+            console.log(`📊 Cambios detectados: ${flowDataNodeCount} nodos vs Initial: ${initialNodeCount} nodos`);
             dataToLoad = parsedFlowData;
             userHasModified.value = true;
           } else {
@@ -750,9 +812,24 @@ export default {
 
       const node = findNode(nodeId);
       if (node) {
+        const previousData = { ...node.data };
         node.data = { ...node.data, ...newData };
+        
+        // Marcar que el usuario ha modificado datos si hay cambios reales
+        const hasDataChanged = JSON.stringify(previousData) !== JSON.stringify(node.data);
+        if (hasDataChanged && !userHasModified.value) {
+          console.log('👤 MODIFICACIÓN DE DATOS DETECTADA - Marcando userHasModified como true');
+          userHasModified.value = true;
+        }
+        
         emit('trigger-event', { name: 'nodeUpdated', event: { node } });
-        console.log('✅ Nodo actualizado correctamente:', node.id);
+        console.log('✅ Nodo actualizado correctamente:', {
+          nodeId: node.id,
+          previousData,
+          newData: node.data,
+          hasChanged: hasDataChanged,
+          userHasModified: userHasModified.value
+        });
         
         setTimeout(() => emitFlowSaved('nodeDataUpdated'), 50);
       } else {
